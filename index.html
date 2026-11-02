@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Movie Rating Prediction{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <p class="subtitle">MACHINE LEARNING PROJECT</p>
+
+        <h1>
+            Movie Rating
+            <span>Prediction</span>
+        </h1>
+
+        <p class="hero-description">
+            Predict movie ratings using Linear Regression.
+            Enter movie details and get an estimated rating
+            based on our trained machine learning model.
+        </p>
+
+        <div class="hero-buttons">
+
+            {% if session.get('user_id') %}
+
+                <a href="{{ url_for('prediction') }}"
+                   class="btn btn-primary">
+                    Predict Movie Rating
+                </a>
+
+                <a href="{{ url_for('dashboard') }}"
+                   class="btn btn-secondary">
+                    Dashboard
+                </a>
+
+            {% else %}
+
+                <a href="{{ url_for('login') }}"
+                   class="btn btn-primary">
+                    Get Started
+                </a>
+
+                <a href="{{ url_for('register') }}"
+                   class="btn btn-secondary">
+                    Create Account
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="features">
+
+    <h2>About Movie Rating Prediction</h2>
+
+    <p class="section-description">
+        This application uses a Linear Regression algorithm
+        trained with movie data to estimate movie ratings.
+    </p>
+
+    <div class="feature-grid">
+
+        <div class="feature-card">
+            <h3>Linear Regression</h3>
+            <p>
+                Uses a machine learning regression model
+                trained on the movie dataset.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Movie Details</h3>
+            <p>
+                Uses runtime, budget, number of votes
+                and previous rating as input features.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Rating Prediction</h3>
+            <p>
+                Generates an estimated movie rating
+                using the trained model.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

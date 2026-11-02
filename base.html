@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Movie Rating Prediction{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="logo">
+        Movie Rating Prediction
+    </div>
+
+    <nav>
+        <a href="{{ url_for('index') }}">Home</a>
+
+        {% if session.get('user_id') %}
+
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
+            <a href="{{ url_for('prediction') }}">Prediction</a>
+
+            <a href="{{ url_for('profile') }}">Profile</a>
+
+            {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin') }}">Admin</a>
+            {% endif %}
+
+            <a href="{{ url_for('logout') }}">Logout</a>
+
+        {% else %}
+
+            <a href="{{ url_for('login') }}">Login</a>
+
+            <a href="{{ url_for('register') }}">Register</a>
+
+        {% endif %}
+    </nav>
+</header>
+
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="messages">
+            {% for category, message in messages %}
+                <div class="message {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+
+<main class="main-content">
+
+    {% block content %}
+
+    {% endblock %}
+
+</main>
+
+
+<footer class="footer">
+    <p>
+        © 2026 Movie Rating Prediction.
+        All Rights Reserved.
+    </p>
+</footer>
+
+
+</body>
+</html>

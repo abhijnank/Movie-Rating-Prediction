@@ -1,0 +1,37 @@
+
+{% extends "base.html" %}
+
+{% block title %}Logout | MovieRate AI{% endblock %}
+
+{% block content %}
+
+<section class="logout-page">
+
+    <div class="logout-card">
+
+        <div class="logout-icon">✓</div>
+
+        <p class="eyebrow">MOVIERATE AI</p>
+
+        <h1>You Have <span class="gold-text">Logged Out!</span></h1>
+
+        <p>
+            Thank you for using MovieRate AI.
+            Your session has been successfully ended.
+        </p>
+
+        <div class="logout-actions">
+            <a href="{{ url_for('login') }}" class="btn btn-primary">
+                Login Again →
+            </a>
+
+            <a href="{{ url_for('home') }}" class="btn btn-outline">
+                Back to Home
+            </a>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
