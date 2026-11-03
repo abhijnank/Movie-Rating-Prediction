@@ -1,1 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Prediction - MoviePredict</title>
 
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #07152e;
+            color: white;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: #0b1e3d;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 35px auto;
+            padding: 30px;
+            background: #0b1e3d;
+            border-radius: 12px;
+            border: 1px solid #1e3a5f;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #cbd5e1;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #334b70;
+            border-radius: 6px;
+            background: #07152e;
+            color: white;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 25px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .message {
+            background: #17365e;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #60a5fa;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <h2>MoviePredict</h2>
+
+        <div>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('profile') }}">Profile</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <h1>Movie Rating Prediction</h1>
+
+        <p class="subtitle">
+            Enter movie details to predict its rating
+        </p>
+
+        {% with messages = get_flashed_messages() %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('prediction') }}">
+
+            <label>Movie Genre</label>
+            <select name="genre" required>
+                <option value="">Select Genre</option>
+                <option value="Action">Action</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Drama">Drama</option>
+                <option value="Horror">Horror</option>
+                <option value="Romance">Romance</option>
+                <option value="Thriller">Thriller</option>
+                <option value="Sci-Fi">Sci-Fi</option>
+                <option value="Animation">Animation</option>
+                <option value="Crime">Crime</option>
+                <option value="Fantasy">Fantasy</option>
+                <option value="Documentary">Documentary</option>
+            </select>
+
+            <label>Runtime (Minutes)</label>
+            <input type="number" name="runtime"
+                   min="1" step="any"
+                   placeholder="Example: 120" required>
+
+            <label>Budget (Million)</label>
+            <input type="number" name="budget"
+                   min="0" step="any"
+                   placeholder="Example: 50" required>
+
+            <label>Number of Votes</label>
+            <input type="number" name="votes"
+                   min="0" step="any"
+                   placeholder="Example: 50000" required>
+
+            <label>Previous Rating</label>
+            <input type="number" name="previous_rating"
+                   min="0" max="10" step="any"
+                   placeholder="Enter rating between 0 and 10"
+                   required>
+
+            <button type="submit">Predict Rating</button>
+
+        </form>
+
+        <a href="{{ url_for('dashboard') }}" class="back">
+            Back to Dashboard
+        </a>
+
+    </div>
+
+</body>
+</html>
