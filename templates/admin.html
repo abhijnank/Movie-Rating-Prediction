@@ -6,11 +6,7 @@
     <title>Admin Dashboard - MoviePredict</title>
 
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: Arial, sans-serif;
@@ -20,15 +16,18 @@
 
         nav {
             background: #0b1e3d;
-            padding: 20px 6%;
+            padding: 20px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         nav a {
             color: white;
             text-decoration: none;
+            margin-left: 16px;
         }
 
         .container {
@@ -37,9 +36,7 @@
             margin: 35px auto;
         }
 
-        h1 {
-            margin-bottom: 10px;
-        }
+        h1 { margin-bottom: 10px; }
 
         .subtitle {
             color: #cbd5e1;
@@ -53,9 +50,9 @@
             margin-bottom: 30px;
         }
 
-        .card {
+        .card, .section {
             background: #0b1e3d;
-            padding: 25px;
+            padding: 23px;
             border-radius: 10px;
             border: 1px solid #1e3a5f;
         }
@@ -71,16 +68,23 @@
         }
 
         .section {
-            background: #0b1e3d;
-            padding: 22px;
-            border-radius: 10px;
             margin-bottom: 25px;
             overflow-x: auto;
         }
 
-        .section h2 {
-            margin-bottom: 18px;
+        .section h2 { margin-bottom: 18px; }
+
+        .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin: 5px 5px 20px 0;
         }
+
+        .btn:hover { background: #1d4ed8; }
 
         table {
             width: 100%;
@@ -94,131 +98,121 @@
             border-bottom: 1px solid #334b70;
         }
 
-        th {
-            color: #93c5fd;
-        }
+        th { color: #93c5fd; }
 
-        .empty {
-            color: #cbd5e1;
-            padding: 12px 0;
-        }
-
-        .logout {
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 11px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-        }
+        .empty { color: #cbd5e1; padding: 12px 0; }
 
         @media(max-width: 600px) {
-            nav {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
+            nav { flex-direction: column; align-items: flex-start; }
+            nav a { margin: 0 10px 0 0; }
         }
     </style>
 </head>
 
 <body>
 
-    <nav>
-        <h2>MoviePredict Admin</h2>
-        <a href="{{ url_for('logout') }}" class="logout">Logout</a>
-    </nav>
+<nav>
+    <h2>MoviePredict Admin</h2>
 
-    <div class="container">
+    <div>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('admin') }}">Admin Dashboard</a>
+        <a href="{{ url_for('prediction') }}">Prediction</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</nav>
 
-        <h1>Admin Dashboard</h1>
-        <p class="subtitle">Manage users and view movie predictions.</p>
+<div class="container">
 
-        <div class="cards">
+    <h1>Welcome, {{ session.get('username', 'Admin') }}!</h1>
+    <p class="subtitle">Manage users and view movie predictions.</p>
 
-            <div class="card">
-                <h3>Total Users</h3>
-                <p>{{ total_users }}</p>
-            </div>
+    <a href="{{ url_for('prediction') }}" class="btn">
+        Predict Movie Rating
+    </a>
 
-            <div class="card">
-                <h3>Total Predictions</h3>
-                <p>{{ total_predictions }}</p>
-            </div>
+    <div class="cards">
 
+        <div class="card">
+            <h3>Total Users</h3>
+            <p>{{ total_users }}</p>
         </div>
 
-        <div class="section">
-
-            <h2>Registered Users</h2>
-
-            {% if users %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user['username'] }}</td>
-                        <td>{{ user['email'] }}</td>
-                        <td>{{ user['role'] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-                <p class="empty">No users found.</p>
-            {% endif %}
-
-        </div>
-
-        <div class="section">
-
-            <h2>All Movie Predictions</h2>
-
-            {% if predictions %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Genre</th>
-                        <th>Runtime</th>
-                        <th>Budget</th>
-                        <th>Votes</th>
-                        <th>Previous Rating</th>
-                        <th>Predicted Rating</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for item in predictions %}
-                    <tr>
-                        <td>{{ item['username'] }}</td>
-                        <td>{{ item['genre'] }}</td>
-                        <td>{{ item['runtime'] }}</td>
-                        <td>{{ item['budget'] }}</td>
-                        <td>{{ item['votes'] }}</td>
-                        <td>{{ item['previous_rating'] }}</td>
-                        <td>{{ item['predicted_rating'] }}</td>
-                        <td>{{ item['created_at'] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-                <p class="empty">No predictions found.</p>
-            {% endif %}
-
+        <div class="card">
+            <h3>Total Predictions</h3>
+            <p>{{ total_predictions }}</p>
         </div>
 
     </div>
+
+    <div class="section">
+        <h2>Registered Users</h2>
+
+        {% if users %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user['username'] }}</td>
+                    <td>{{ user['email'] }}</td>
+                    <td>{{ user['role'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">No users found.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>All Movie Predictions</h2>
+
+        {% if predictions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Genre</th>
+                    <th>Runtime</th>
+                    <th>Budget</th>
+                    <th>Votes</th>
+                    <th>Previous Rating</th>
+                    <th>Predicted Rating</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in predictions %}
+                <tr>
+                    <td>{{ item['username'] }}</td>
+                    <td>{{ item['genre'] }}</td>
+                    <td>{{ item['runtime'] }}</td>
+                    <td>{{ item['budget'] }}</td>
+                    <td>{{ item['votes'] }}</td>
+                    <td>{{ item['previous_rating'] }}</td>
+                    <td>{{ item['predicted_rating'] }}</td>
+                    <td>{{ item['created_at'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">No predictions found.</p>
+        {% endif %}
+    </div>
+
+</div>
 
 </body>
 </html>
