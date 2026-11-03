@@ -7,7 +7,6 @@ import numpy as np
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -20,7 +19,11 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 # --------------------------------------------------
 
 app = Flask(__name__)
-app.secret_key = "movie_rating_prediction_secret_key"
+
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "movie_rating_project_secret_key"
+)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -61,138 +64,13 @@ training_rows = 0
 
 
 # --------------------------------------------------
-# TRAIN LINEAR REGRESSION MODEL
-# --------------------------------------------------
-
-def train_model():
-    global model, mae, mse, rmse, r2, training_rows
-
-    if not os.path.exists(DATASET):
-        raise FileNotFoundError(
-            "rating.csv not found. Keep rating.csv in the same folder as app.py."
-        )
-
-    df = pd.read_csv(DATASET)
-
-    required_columns = FEATURES + [TARGET]
-
-    missing_columns = [
-        column for column in required_columns
-        if column not in df.columns
-    ]
-
-    if missing_columns:
-        raise ValueError(
-            f"Missing columns in rating.csv: {missing_columns}"
-        )
-
-    # Clean Genre values
-    df["Genre"] = df["Genre"].astype("string").str.strip()
-
-    # Convert numeric columns
-    for column in NUMERIC_FEATURES + [TARGET]:
-        df[column] = pd.to_numeric(
-            df[column], errors="coerce"
-        )
-
-    df = df.dropna(subset=required_columns)
-
-    df = df[df["Genre"] != ""]
-
-    if len(df) < 5:
-        raise ValueError(
-            "Dataset must contain at least 5 valid rows."
-        )
-
-    X = df[FEATURES]
-    y = df[TARGET]
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=0.2,
-        random_state=42
-    )
-
-    # Encode Genre and pass numeric features
-    preprocessor = ColumnTransformer(
-        transformers=[
-            (
-                "genre",
-                OneHotEncoder(handle_unknown="ignore"),
-                CATEGORICAL_FEATURES
-            ),
-            (
-                "numeric",
-                "passthrough",
-                NUMERIC_FEATURES
-            )
-        ]
-    )
-
-    # Linear Regression Pipeline
-    evaluation_model = Pipeline(
-        steps=[
-            ("preprocessor", preprocessor),
-            ("regressor", LinearRegression())
-        ]
-    )
-
-    evaluation_model.fit(X_train, y_train)
-
-    predictions = evaluation_model.predict(X_test)
-
-    mae = float(mean_absolute_error(y_test, predictions))
-    mse = float(mean_squared_error(y_test, predictions))
-    rmse = float(np.sqrt(mse))
-    r2 = float(r2_score(y_test, predictions))
-
-    # Train final model using complete dataset
-    model = Pipeline(
-        steps=[
-            (
-                "preprocessor",
-                ColumnTransformer(
-                    transformers=[
-                        (
-                            "genre",
-                            OneHotEncoder(handle_unknown="ignore"),
-                            CATEGORICAL_FEATURES
-                        ),
-                        (
-                            "numeric",
-                            "passthrough",
-                            NUMERIC_FEATURES
-                        )
-                    ]
-                )
-            ),
-            ("regressor", LinearRegression())
-        ]
-    )
-
-    model.fit(X, y)
-
-    training_rows = len(df)
-
-    print("Model trained successfully!")
-    print("Algorithm: Linear Regression")
-    print("Genre included in training.")
-    print("Dataset rows:", training_rows)
-    print("MAE:", mae)
-    print("MSE:", mse)
-    print("RMSE:", rmse)
-    print("R2 Score:", r2)
-
-
-# --------------------------------------------------
 # DATABASE CONNECTION
 # --------------------------------------------------
 
 def get_db():
-    con = sqlite3.connect(DATABASE)
-    con.row_factory = sqlite3.Row
-    return con
+    connection = sqlite3.connect(DATABASE)
+    connection.row_factory = sqlite3.Row
+    return connection
 
 
 # --------------------------------------------------
@@ -201,10 +79,10 @@ def get_db():
 
 def create_tables():
 
-    con = get_db()
-    cur = con.cursor()
+    conn = get_db()
+    cursor = conn.cursor()
 
-    cur.execute("""
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
@@ -214,112 +92,235 @@ def create_tables():
         )
     """)
 
-    cur.execute("""
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS predictions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             genre TEXT,
             runtime REAL,
             budget REAL,
-            votes REAL,
+            votes INTEGER,
             previous_rating REAL,
-            predicted_rating REAL NOT NULL DEFAULT 0,
+            predicted_rating REAL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
     """)
 
-    # Update older database if columns are missing
-    columns = [
-        row["name"]
-        for row in cur.execute(
-            "PRAGMA table_info(predictions)"
-        ).fetchall()
-    ]
+    # Add missing columns if an older database is used.
+    cursor.execute("PRAGMA table_info(users)")
+    user_columns = [row["name"] for row in cursor.fetchall()]
 
-    required_db_columns = {
-        "user_id": "INTEGER",
+    if "role" not in user_columns:
+        cursor.execute(
+            "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"
+        )
+
+    cursor.execute("PRAGMA table_info(predictions)")
+    prediction_columns = [row["name"] for row in cursor.fetchall()]
+
+    required_columns = {
         "genre": "TEXT",
         "runtime": "REAL",
         "budget": "REAL",
-        "votes": "REAL",
+        "votes": "INTEGER",
         "previous_rating": "REAL",
-        "predicted_rating": "REAL NOT NULL DEFAULT 0",
+        "predicted_rating": "REAL",
         "created_at": "TIMESTAMP"
     }
 
-    for column_name, column_type in required_db_columns.items():
-
-        if column_name not in columns:
-            cur.execute(
-                f"ALTER TABLE predictions ADD COLUMN "
-                f"{column_name} {column_type}"
+    for column, data_type in required_columns.items():
+        if column not in prediction_columns:
+            cursor.execute(
+                f"ALTER TABLE predictions ADD COLUMN {column} {data_type}"
             )
 
-    # Create default admin account
-    admin = cur.execute(
+    # Default admin account
+    cursor.execute(
         "SELECT id FROM users WHERE username = ?",
         ("admin",)
-    ).fetchone()
+    )
 
-    if admin is None:
+    if cursor.fetchone() is None:
 
-        hashed_password = generate_password_hash("Admin@123")
-
-        cur.execute("""
+        cursor.execute("""
             INSERT INTO users (username, email, password, role)
             VALUES (?, ?, ?, ?)
         """, (
             "admin",
             "admin@movierating.com",
-            hashed_password,
+            generate_password_hash("Admin@123"),
             "admin"
         ))
 
-    con.commit()
-    con.close()
-
-    print("Database tables created successfully!")
+    conn.commit()
+    conn.close()
 
 
 # --------------------------------------------------
-# LOGIN REQUIRED
+# TRAIN MACHINE LEARNING MODEL
+# --------------------------------------------------
+
+def train_model():
+
+    global model, mae, mse, rmse, r2, training_rows
+
+    try:
+
+        if not os.path.exists(DATASET):
+            print("ERROR: rating.csv file not found.")
+            return
+
+        df = pd.read_csv(DATASET)
+
+        required_columns = FEATURES + [TARGET]
+
+        missing_columns = [
+            column for column in required_columns
+            if column not in df.columns
+        ]
+
+        if missing_columns:
+            print("Missing dataset columns:", missing_columns)
+            return
+
+        df = df[required_columns].copy()
+
+        for column in NUMERIC_FEATURES + [TARGET]:
+            df[column] = pd.to_numeric(
+                df[column],
+                errors="coerce"
+            )
+
+        df["Genre"] = df["Genre"].astype(str).str.strip()
+
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+        df.dropna(inplace=True)
+
+        df = df[df["Genre"] != ""]
+
+        if len(df) < 5:
+            print("ERROR: Dataset needs at least 5 valid rows.")
+            return
+
+        X = df[FEATURES]
+        y = df[TARGET]
+
+        preprocessing = ColumnTransformer(
+            transformers=[
+                (
+                    "genre",
+                    OneHotEncoder(handle_unknown="ignore"),
+                    CATEGORICAL_FEATURES
+                ),
+                (
+                    "numeric",
+                    "passthrough",
+                    NUMERIC_FEATURES
+                )
+            ]
+        )
+
+        pipeline = Pipeline(steps=[
+            ("preprocessing", preprocessing),
+            ("regression", LinearRegression())
+        ])
+
+        # Evaluate model on a test split
+        from sklearn.model_selection import train_test_split
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X,
+            y,
+            test_size=0.2,
+            random_state=42
+        )
+
+        evaluation_model = Pipeline(steps=[
+            ("preprocessing", ColumnTransformer(
+                transformers=[
+                    (
+                        "genre",
+                        OneHotEncoder(handle_unknown="ignore"),
+                        CATEGORICAL_FEATURES
+                    ),
+                    (
+                        "numeric",
+                        "passthrough",
+                        NUMERIC_FEATURES
+                    )
+                ]
+            )),
+            ("regression", LinearRegression())
+        ])
+
+        evaluation_model.fit(X_train, y_train)
+
+        predictions = evaluation_model.predict(X_test)
+
+        mae = float(mean_absolute_error(y_test, predictions))
+        mse = float(mean_squared_error(y_test, predictions))
+        rmse = float(np.sqrt(mse))
+
+        if len(y_test) > 1:
+            r2 = float(r2_score(y_test, predictions))
+        else:
+            r2 = 0.0
+
+        # Train final model using complete dataset
+        pipeline.fit(X, y)
+
+        model = pipeline
+        training_rows = len(df)
+
+        print("Model trained successfully!")
+        print("Dataset rows:", training_rows)
+        print("MAE:", mae)
+        print("MSE:", mse)
+        print("RMSE:", rmse)
+        print("R2 Score:", r2)
+
+    except Exception as error:
+        print("Model training error:", error)
+
+
+# --------------------------------------------------
+# LOGIN REQUIRED DECORATOR
 # --------------------------------------------------
 
 def login_required(function):
 
     @wraps(function)
-    def decorated_function(*args, **kwargs):
+    def wrapper(*args, **kwargs):
 
         if "user_id" not in session:
-            flash("Please login first.", "error")
+            flash("Please login first.")
             return redirect(url_for("login"))
 
         return function(*args, **kwargs)
 
-    return decorated_function
+    return wrapper
 
 
 # --------------------------------------------------
-# ADMIN REQUIRED
+# ADMIN REQUIRED DECORATOR
 # --------------------------------------------------
 
 def admin_required(function):
 
     @wraps(function)
-    def decorated_function(*args, **kwargs):
+    def wrapper(*args, **kwargs):
 
         if "user_id" not in session:
-            flash("Please login first.", "error")
             return redirect(url_for("login"))
 
         if session.get("role") != "admin":
-            flash("Access denied. Admin only.", "error")
+            flash("Admin access required.")
             return redirect(url_for("dashboard"))
 
         return function(*args, **kwargs)
 
-    return decorated_function
+    return wrapper
 
 
 # --------------------------------------------------
@@ -346,26 +347,26 @@ def register():
         confirm_password = request.form.get("confirm_password", "")
 
         if not username or not email or not password:
-            flash("Please fill all required fields.", "error")
-            return redirect(url_for("register"))
-
-        if len(password) < 8:
-            flash("Password must contain at least 8 characters.", "error")
+            flash("Please fill all fields.")
             return redirect(url_for("register"))
 
         if password != confirm_password:
-            flash("Passwords do not match.", "error")
+            flash("Passwords do not match.")
             return redirect(url_for("register"))
 
-        hashed_password = generate_password_hash(password)
+        if len(password) < 6:
+            flash("Password must contain at least 6 characters.")
+            return redirect(url_for("register"))
 
-        con = get_db()
+        conn = get_db()
+        cursor = conn.cursor()
 
         try:
 
-            con.execute("""
-                INSERT INTO users
-                (username, email, password, role)
+            hashed_password = generate_password_hash(password)
+
+            cursor.execute("""
+                INSERT INTO users (username, email, password, role)
                 VALUES (?, ?, ?, ?)
             """, (
                 username,
@@ -374,18 +375,18 @@ def register():
                 "user"
             ))
 
-            con.commit()
+            conn.commit()
 
-            flash("Registration successful. Please login.", "success")
-
+            flash("Registration successful. Please login.")
             return redirect(url_for("login"))
 
         except sqlite3.IntegrityError:
 
-            flash("Username or email already exists.", "error")
+            flash("Username or email already exists.")
+            return redirect(url_for("register"))
 
         finally:
-            con.close()
+            conn.close()
 
     return render_template("register.html")
 
@@ -402,57 +403,64 @@ def login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
 
-        con = get_db()
+        conn = get_db()
+        cursor = conn.cursor()
 
-        user = con.execute("""
-            SELECT * FROM users
-            WHERE username = ?
-        """, (username,)).fetchone()
+        cursor.execute(
+            "SELECT * FROM users WHERE username = ?",
+            (username,)
+        )
 
-        con.close()
+        user = cursor.fetchone()
+        conn.close()
 
         if user and check_password_hash(user["password"], password):
+
+            session.clear()
 
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             session["role"] = user["role"]
-
-            flash("Login successful.", "success")
 
             if user["role"] == "admin":
                 return redirect(url_for("admin"))
 
             return redirect(url_for("dashboard"))
 
-        flash("Invalid username or password.", "error")
+        flash("Invalid username or password.")
 
     return render_template("login.html")
 
 
 # --------------------------------------------------
-# DASHBOARD PAGE
+# USER DASHBOARD
 # --------------------------------------------------
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
 
-    con = get_db()
+    conn = get_db()
+    cursor = conn.cursor()
 
-    history = con.execute("""
+    cursor.execute("""
         SELECT *
         FROM predictions
         WHERE user_id = ?
         ORDER BY id DESC
-    """, (session["user_id"],)).fetchall()
+    """, (session["user_id"],))
 
-    prediction_count = con.execute("""
+    history = cursor.fetchall()
+
+    cursor.execute("""
         SELECT COUNT(*) AS total
         FROM predictions
         WHERE user_id = ?
-    """, (session["user_id"],)).fetchone()["total"]
+    """, (session["user_id"],))
 
-    con.close()
+    prediction_count = cursor.fetchone()["total"]
+
+    conn.close()
 
     return render_template(
         "dashboard.html",
@@ -478,42 +486,30 @@ def prediction():
 
         try:
 
+            if model is None:
+                flash("Machine Learning model is not available.")
+                return redirect(url_for("prediction"))
+
             genre = request.form.get("genre", "").strip()
 
-            runtime = float(request.form.get("runtime", ""))
-            budget = float(request.form.get("budget", ""))
-            votes = float(request.form.get("votes", ""))
+            runtime = float(request.form.get("runtime", 0))
+            budget = float(request.form.get("budget", 0))
+            votes = int(request.form.get("votes", 0))
             previous_rating = float(
-                request.form.get("previous_rating", "")
+                request.form.get("previous_rating", 0)
             )
 
             if not genre:
-                raise ValueError("Please select a movie genre.")
+                flash("Please select a genre.")
+                return redirect(url_for("prediction"))
 
-            if not all(np.isfinite([
-                runtime,
-                budget,
-                votes,
-                previous_rating
-            ])):
-                raise ValueError("Enter valid numeric values.")
-
-            if runtime <= 0:
-                raise ValueError("Runtime must be greater than zero.")
-
-            if budget < 0:
-                raise ValueError("Budget cannot be negative.")
-
-            if votes < 0:
-                raise ValueError("Number of votes cannot be negative.")
+            if runtime <= 0 or budget < 0 or votes < 0:
+                flash("Please enter valid movie details.")
+                return redirect(url_for("prediction"))
 
             if not 0 <= previous_rating <= 10:
-                raise ValueError(
-                    "Previous rating must be between 0 and 10."
-                )
-
-            if model is None:
-                raise RuntimeError("Machine learning model is not trained.")
+                flash("Previous rating must be between 0 and 10.")
+                return redirect(url_for("prediction"))
 
             input_data = pd.DataFrame([{
                 "Genre": genre,
@@ -523,21 +519,18 @@ def prediction():
                 "Previous_Rating": previous_rating
             }])
 
-            predicted_rating = float(
-                model.predict(input_data)[0]
-            )
+            predicted_rating = float(model.predict(input_data)[0])
 
             predicted_rating = max(
-                0.0,
-                min(10.0, predicted_rating)
+                0,
+                min(10, predicted_rating)
             )
 
-            # Save prediction in database
-            con = get_db()
+            conn = get_db()
+            cursor = conn.cursor()
 
-            con.execute("""
-                INSERT INTO predictions
-                (
+            cursor.execute("""
+                INSERT INTO predictions (
                     user_id,
                     genre,
                     runtime,
@@ -557,12 +550,12 @@ def prediction():
                 predicted_rating
             ))
 
-            con.commit()
-            con.close()
+            conn.commit()
+            conn.close()
 
             return render_template(
                 "result.html",
-                prediction=round(predicted_rating, 2),
+                prediction=predicted_rating,
                 genre=genre,
                 runtime=runtime,
                 budget=budget,
@@ -570,20 +563,13 @@ def prediction():
                 previous_rating=previous_rating
             )
 
-        except (ValueError, TypeError) as error:
-
-            flash(str(error), "error")
+        except (ValueError, TypeError):
+            flash("Please enter valid numeric values.")
             return redirect(url_for("prediction"))
 
         except Exception as error:
-
             print("Prediction error:", error)
-
-            flash(
-                "Prediction failed. Check the Flask terminal for the error.",
-                "error"
-            )
-
+            flash("Prediction failed. Please try again.")
             return redirect(url_for("prediction"))
 
     return render_template("prediction.html")
@@ -597,21 +583,25 @@ def prediction():
 @login_required
 def profile():
 
-    con = get_db()
+    conn = get_db()
+    cursor = conn.cursor()
 
-    user = con.execute("""
-        SELECT id, username, email, role
-        FROM users
-        WHERE id = ?
-    """, (session["user_id"],)).fetchone()
+    cursor.execute(
+        "SELECT * FROM users WHERE id = ?",
+        (session["user_id"],)
+    )
 
-    prediction_count = con.execute("""
+    user = cursor.fetchone()
+
+    cursor.execute("""
         SELECT COUNT(*) AS total
         FROM predictions
         WHERE user_id = ?
-    """, (session["user_id"],)).fetchone()["total"]
+    """, (session["user_id"],))
 
-    con.close()
+    prediction_count = cursor.fetchone()["total"]
+
+    conn.close()
 
     return render_template(
         "profile.html",
@@ -621,43 +611,42 @@ def profile():
 
 
 # --------------------------------------------------
-# ADMIN PAGE
+# ADMIN DASHBOARD
 # --------------------------------------------------
 
 @app.route("/admin")
 @admin_required
 def admin():
 
-    con = get_db()
+    conn = get_db()
+    cursor = conn.cursor()
 
-    users = con.execute("""
+    cursor.execute("""
         SELECT id, username, email, role
         FROM users
         ORDER BY id DESC
-    """).fetchall()
+    """)
 
-    predictions = con.execute("""
+    users = cursor.fetchall()
+
+    cursor.execute("""
         SELECT
             predictions.*,
             users.username
         FROM predictions
         LEFT JOIN users
-        ON users.id = predictions.user_id
+        ON predictions.user_id = users.id
         ORDER BY predictions.id DESC
-    """).fetchall()
+    """)
 
-    total_users = con.execute("""
-        SELECT COUNT(*) AS total
-        FROM users
-        WHERE role != 'admin'
-    """).fetchone()["total"]
+    predictions = cursor.fetchall()
 
-    total_predictions = con.execute("""
-        SELECT COUNT(*) AS total
-        FROM predictions
-    """).fetchone()["total"]
+    total_users = len(users)
 
-    con.close()
+    cursor.execute("SELECT COUNT(*) AS total FROM predictions")
+    total_predictions = cursor.fetchone()["total"]
+
+    conn.close()
 
     return render_template(
         "admin.html",
@@ -677,23 +666,25 @@ def logout():
 
     session.clear()
 
-    flash("You have been logged out.", "success")
+    flash("You have been logged out.")
 
     return redirect(url_for("index"))
 
 
 # --------------------------------------------------
-# RUN APPLICATION
+# INITIALIZE APP FOR RENDER AND LOCAL RUN
 # --------------------------------------------------
+
+create_tables()
+train_model()
+
 
 if __name__ == "__main__":
 
-    create_tables()
-
-    train_model()
+    port = int(os.environ.get("PORT", 5000))
 
     app.run(
-        host="127.0.0.1",
-        port=5000,
-        debug=True
+        host="0.0.0.0",
+        port=port,
+        debug=False
     )
