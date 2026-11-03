@@ -1,1 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result - MoviePredict</title>
 
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #07152e;
+            color: white;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: #0b1e3d;
+            padding: 20px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 55px auto;
+            padding: 35px;
+            background: #0b1e3d;
+            border-radius: 12px;
+            border: 1px solid #1e3a5f;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            margin-bottom: 25px;
+        }
+
+        .result {
+            background: #07152e;
+            border: 1px solid #2563eb;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .result h2 {
+            color: #93c5fd;
+            margin-bottom: 12px;
+        }
+
+        .rating {
+            font-size: 48px;
+            font-weight: bold;
+            color: #60a5fa;
+        }
+
+        .details {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .details p {
+            padding: 12px 5px;
+            border-bottom: 1px solid #334b70;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 13px 22px;
+            margin: 8px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        @media(max-width: 600px) {
+            .container {
+                margin: 25px 15px;
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <h2>MoviePredict</h2>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    </nav>
+
+    <div class="container">
+
+        <h1>Prediction Successful!</h1>
+
+        <p class="subtitle">
+            Your movie rating prediction is ready.
+        </p>
+
+        <div class="result">
+            <h2>Predicted Movie Rating</h2>
+
+            <div class="rating">
+                {{ "%.2f"|format(prediction) }} / 10
+            </div>
+        </div>
+
+        <div class="details">
+
+            <p><strong>Genre:</strong> {{ genre }}</p>
+
+            <p><strong>Runtime:</strong> {{ runtime }} minutes</p>
+
+            <p><strong>Budget:</strong> {{ budget }} million</p>
+
+            <p><strong>Number of Votes:</strong> {{ votes }}</p>
+
+            <p><strong>Previous Rating:</strong> {{ previous_rating }}</p>
+
+        </div>
+
+        <a href="{{ url_for('prediction') }}" class="btn">
+            Predict Another Movie
+        </a>
+
+        <a href="{{ url_for('dashboard') }}" class="btn">
+            Go to Dashboard
+        </a>
+
+    </div>
+
+</body>
+</html>
