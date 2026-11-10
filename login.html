@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login | Movie Rating Predictor Pro</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', Arial, sans-serif;
+            background: #0b1929;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 460px;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: #142a40;
+            border: 1px solid #29435e;
+            border-radius: 16px;
+            padding: 38px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.35);
+        }
+
+        .auth-logo {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #f1f5f9;
+            font-size: 28px;
+            margin: 10px 0;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #9fb1c5;
+            margin-bottom: 28px;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin: 16px 0 8px;
+            color: #dbeafe;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            background: #0d2034;
+            border: 1px solid #36516d;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96,165,250,0.15);
+        }
+
+        input::placeholder {
+            color: #71869c;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 85px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 8px;
+            top: 7px;
+            padding: 7px 12px;
+            background: #263b5b;
+            color: #60a5fa;
+            border: 1px solid #36527b;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .toggle-password:hover {
+            background: #36527b;
+            color: white;
+        }
+
+        .login-btn {
+            width: 100%;
+            margin-top: 25px;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #2563a6;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #347fc4;
+            transform: translateY(-2px);
+        }
+
+        .auth-link {
+            color: #60a5fa;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .auth-link:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+        .register-text {
+            text-align: center;
+            margin-top: 25px;
+            color: #a8bacd;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #71869c;
+            font-size: 12px;
+            margin-top: 25px;
+        }
+
+        .alert {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 7px;
+            font-size: 13px;
+        }
+
+        .alert-success {
+            background: #123b30;
+            color: #86efac;
+        }
+
+        .alert-danger, .alert-error {
+            background: #451d28;
+            color: #fca5a5;
+        }
+
+        .alert-warning {
+            background: #493819;
+            color: #fde68a;
+        }
+
+        @media(max-width: 480px) {
+            .auth-card {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="auth-container">
+
+    <div class="auth-card">
+
+        <div class="auth-logo">🎬</div>
+
+        <h1>Welcome Back</h1>
+
+        <p class="subtitle">
+            Login to Movie Rating Predictor Pro
+        </p>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+        <!-- Login Form -->
+        <form method="POST" action="{{ url_for('login') }}">
+
+            <label for="username">Username</label>
+
+            <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Enter your username"
+                autocomplete="username"
+                required
+            >
+
+            <label for="loginPassword">Password</label>
+
+            <div class="password-wrapper">
+
+                <input
+                    type="password"
+                    id="loginPassword"
+                    name="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button
+                    type="button"
+                    class="toggle-password"
+                    onclick="togglePassword('loginPassword', this)"
+                >
+                    Show
+                </button>
+
+            </div>
+
+            <button type="submit" class="login-btn">
+                Login
+            </button>
+
+        </form>
+
+        <!-- Register Link -->
+        <p class="register-text">
+            Don't have an account?
+            <a class="auth-link"
+               href="{{ url_for('register') }}">
+                Create Account
+            </a>
+        </p>
+
+        <div class="footer">
+            © 2026 Movie Rating Predictor Pro
+            <br>
+            All Rights Reserved
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function togglePassword(id, button) {
+
+    const password = document.getElementById(id);
+
+    if (password.type === "password") {
+
+        password.type = "text";
+        button.textContent = "Hide";
+
+    } else {
+
+        password.type = "password";
+        button.textContent = "Show";
+
+    }
+}
+</script>
+
+</body>
+</html>
