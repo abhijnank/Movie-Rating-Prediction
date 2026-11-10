@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Feedback | Movie Rating Predictor Pro</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #0b1929;
+            color: #e2e8f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            background: #142a40;
+            border-bottom: 1px solid #29435e;
+            padding: 17px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            color: white;
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #60a5fa;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        .nav-links a {
+            color: #bdcde0;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #60a5fa;
+        }
+
+        .logout {
+            background: #7f2938;
+            color: white !important;
+            padding: 9px 15px;
+            border-radius: 7px;
+        }
+
+        .feedback-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 25px;
+        }
+
+        .feedback-heading {
+            margin-bottom: 28px;
+        }
+
+        .feedback-heading h1 {
+            color: white;
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .feedback-heading p {
+            color: #9fb1c5;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .feedback-card {
+            background: #142a40;
+            border: 1px solid #29435e;
+            border-radius: 14px;
+            padding: 30px;
+        }
+
+        .feedback-card label {
+            display: block;
+            color: #dceaff;
+            margin-bottom: 9px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .feedback-card input,
+        .feedback-card select,
+        .feedback-card textarea {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 22px;
+            border: 1px solid #3b5b78;
+            border-radius: 8px;
+            background: #0d2239;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .feedback-card input:focus,
+        .feedback-card select:focus,
+        .feedback-card textarea:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96,165,250,0.12);
+        }
+
+        .feedback-card input::placeholder,
+        .feedback-card textarea::placeholder {
+            color: #8197ad;
+        }
+
+        .feedback-card select option {
+            background: #142a40;
+            color: white;
+        }
+
+        .feedback-card textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            border: none;
+            padding: 14px 25px;
+            border-radius: 8px;
+            background: #2465a0;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #327fbd;
+            transform: translateY(-2px);
+        }
+
+        .message {
+            padding: 13px 16px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #1b493f;
+            border: 1px solid #286b57;
+            color: #b9f5d8;
+            font-size: 14px;
+        }
+
+        .error-message {
+            background: #512d36;
+            border-color: #81404d;
+            color: #ffd1d1;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 22px;
+            color: #71869c;
+            border-top: 1px solid #29435e;
+            margin-top: 40px;
+            font-size: 12px;
+        }
+
+        @media(max-width: 600px) {
+            .navbar {
+                padding: 17px;
+            }
+
+            .feedback-container {
+                padding: 18px;
+            }
+
+            .feedback-card {
+                padding: 20px;
+            }
+
+            .nav-links {
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="logo">
+        🎬 Movie<span>Predict</span> Pro
+    </div>
+
+    <div class="nav-links">
+
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('prediction') }}">Prediction</a>
+        <a href="{{ url_for('analytics') }}">Analytics</a>
+        <a href="{{ url_for('dataset') }}">Dataset</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('feedback') }}" class="active">Feedback</a>
+
+        {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('admin') }}">Admin</a>
+        {% endif %}
+
+        <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+
+    </div>
+
+</nav>
+
+
+<div class="feedback-container">
+
+    <div class="feedback-heading">
+        <h1>💬 Share Your Feedback</h1>
+
+        <p>
+            We value your suggestions. Share your experience
+            and help us improve Movie Rating Predictor Pro.
+        </p>
+    </div>
+
+
+    <div class="feedback-card">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+
+                <div class="message {% if category == 'error' %}error-message{% endif %}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+        {% endwith %}
+
+
+        <form method="POST" action="{{ url_for('feedback') }}">
+
+            <label for="name">👤 Your Name</label>
+
+            <input
+                type="text"
+                id="name"
+                name="name"
+                value="{{ session.get('username', '') }}"
+                placeholder="Enter your name"
+                required
+            >
+
+
+            <label for="email">📧 Email Address</label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                value="{{ session.get('email', '') }}"
+                placeholder="Enter your email address"
+                required
+            >
+
+
+            <label for="rating">⭐ Rate Your Experience</label>
+
+            <select id="rating" name="rating" required>
+                <option value="">Select your rating</option>
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Very Good</option>
+                <option value="3">3 - Good</option>
+                <option value="2">2 - Fair</option>
+                <option value="1">1 - Poor</option>
+            </select>
+
+
+            <label for="subject">📝 Feedback Subject</label>
+
+            <input
+                type="text"
+                id="subject"
+                name="subject"
+                placeholder="Enter feedback subject"
+                required
+            >
+
+
+            <label for="message">💭 Your Feedback</label>
+
+            <textarea
+                id="message"
+                name="message"
+                placeholder="Write your suggestions or experience here..."
+                required
+            ></textarea>
+
+
+            <button type="submit" class="submit-btn">
+                Submit Feedback
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<footer class="footer">
+    © 2026 Movie Rating Predictor Pro. All Rights Reserved.
+</footer>
+
+</body>
+</html>
