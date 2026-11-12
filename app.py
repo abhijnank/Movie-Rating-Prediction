@@ -1,3 +1,4 @@
+
 import os
 import sqlite3
 import pandas as pd
@@ -5,23 +6,35 @@ import pandas as pd
 from functools import wraps
 
 from flask import (
-    Flask, render_template, request, redirect,
-    url_for, session, flash
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    flash
 )
 
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score
+)
 
 
-# --------------------------------------------------
+# ==================================================
 # FLASK CONFIGURATION
-# --------------------------------------------------
+# ==================================================
 
 app = Flask(__name__)
 
@@ -32,27 +45,38 @@ app.secret_key = os.environ.get(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DATASET_PATH = os.path.join(BASE_DIR, "MovieDataSet.csv")
-DATABASE_PATH = os.path.join(BASE_DIR, "movie_rating.db")
+DATASET_PATH = os.path.join(
+    BASE_DIR,
+    "MovieDataSet.csv"
+)
+
+DATABASE_PATH = os.path.join(
+    BASE_DIR,
+    "movie_rating.db"
+)
 
 
-# --------------------------------------------------
+# ==================================================
 # DATABASE CONNECTION
-# --------------------------------------------------
+# ==================================================
 
 def get_db():
+
     conn = sqlite3.connect(DATABASE_PATH)
+
     conn.row_factory = sqlite3.Row
+
     return conn
 
 
-# --------------------------------------------------
+# ==================================================
 # DATABASE INITIALIZATION
-# --------------------------------------------------
+# ==================================================
 
 def init_db():
 
     conn = get_db()
+
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -90,27 +114,37 @@ def init_db():
         )
     """)
 
-    # Check older users table columns
+    # USERS TABLE MIGRATION
+
     user_columns = [
-        row["name"] for row in
-        cursor.execute("PRAGMA table_info(users)").fetchall()
+        row["name"]
+        for row in cursor.execute(
+            "PRAGMA table_info(users)"
+        ).fetchall()
     ]
 
     if "email" not in user_columns:
-        cursor.execute("ALTER TABLE users ADD COLUMN email TEXT")
+
+        cursor.execute(
+            "ALTER TABLE users ADD COLUMN email TEXT"
+        )
 
     if "role" not in user_columns:
+
         cursor.execute(
             "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"
         )
 
-    # Check older predictions table columns
+    # PREDICTIONS TABLE MIGRATION
+
     prediction_columns = [
-        row["name"] for row in
-        cursor.execute("PRAGMA table_info(predictions)").fetchall()
+        row["name"]
+        for row in cursor.execute(
+            "PRAGMA table_info(predictions)"
+        ).fetchall()
     ]
 
-    required_prediction_columns = {
+    required_columns = {
         "movie_title": "TEXT",
         "genre": "TEXT",
         "year": "INTEGER",
@@ -120,23 +154,31 @@ def init_db():
         "created_at": "TIMESTAMP"
     }
 
-    for column, data_type in required_prediction_columns.items():
+    for column, data_type in required_columns.items():
 
         if column not in prediction_columns:
+
             cursor.execute(
                 f"ALTER TABLE predictions ADD COLUMN {column} {data_type}"
             )
 
-    # Create default admin if it does not exist
-    admin_user = cursor.execute(
-        "SELECT id FROM users WHERE username = ?",
-        ("admin",)
-    ).fetchone()
+    # DEFAULT ADMIN ACCOUNT
+
+    admin_user = cursor.execute("""
+        SELECT id
+        FROM users
+        WHERE username = ?
+    """, ("admin",)).fetchone()
 
     if admin_user is None:
 
         cursor.execute("""
-            INSERT INTO users (username, email, password, role)
+            INSERT INTO users (
+                username,
+                email,
+                password,
+                role
+            )
             VALUES (?, ?, ?, ?)
         """, (
             "admin",
@@ -146,16 +188,18 @@ def init_db():
         ))
 
     conn.commit()
+
     conn.close()
 
 
-# --------------------------------------------------
+# ==================================================
 # LOAD DATASET
-# --------------------------------------------------
+# ==================================================
 
 def load_dataset():
 
     if not os.path.exists(DATASET_PATH):
+
         raise FileNotFoundError(
             "MovieDataSet.csv not found in project folder."
         )
@@ -178,12 +222,18 @@ def load_dataset():
         "rating"
     ]
 
-    for column in required_columns:
+    missing_columns = [
+        column
+        for column in required_columns
+        if column not in df.columns
+    ]
 
-        if column not in df.columns:
-            raise ValueError(
-                f"Dataset column missing: {column}"
-            )
+    if missing_columns:
+
+        raise ValueError(
+            "Dataset columns missing: "
+            + ", ".join(missing_columns)
+        )
 
     df["title"] = (
         df["title"]
@@ -231,6 +281,7 @@ def load_dataset():
     ].copy()
 
     if df.empty:
+
         raise ValueError(
             "No valid movie records found in dataset."
         )
@@ -238,9 +289,9 @@ def load_dataset():
     return df
 
 
-# --------------------------------------------------
+# ==================================================
 # MACHINE LEARNING MODEL
-# --------------------------------------------------
+# ==================================================
 
 FEATURES = [
     "genre",
@@ -255,10 +306,14 @@ NUMERIC_FEATURES = [
     "votes"
 ]
 
-CATEGORICAL_FEATURES = ["genre"]
+CATEGORICAL_FEATURES = [
+    "genre"
+]
 
 model = None
+
 movie_df = pd.DataFrame()
+
 model_metrics = {}
 
 
@@ -271,25 +326,30 @@ def train_model():
     movie_df = load_dataset()
 
     X = movie_df[FEATURES]
+
     y = movie_df["rating"]
 
-    numeric_transformer = Pipeline(steps=[
-        (
-            "imputer",
-            SimpleImputer(strategy="median")
-        )
-    ])
+    numeric_transformer = Pipeline(
+        steps=[
+            (
+                "imputer",
+                SimpleImputer(strategy="median")
+            )
+        ]
+    )
 
-    categorical_transformer = Pipeline(steps=[
-        (
-            "imputer",
-            SimpleImputer(strategy="most_frequent")
-        ),
-        (
-            "onehot",
-            OneHotEncoder(handle_unknown="ignore")
-        )
-    ])
+    categorical_transformer = Pipeline(
+        steps=[
+            (
+                "imputer",
+                SimpleImputer(strategy="most_frequent")
+            ),
+            (
+                "onehot",
+                OneHotEncoder(handle_unknown="ignore")
+            )
+        ]
+    )
 
     preprocessor = ColumnTransformer(
         transformers=[
@@ -306,19 +366,39 @@ def train_model():
         ]
     )
 
-    model = Pipeline(steps=[
-        ("preprocessor", preprocessor),
-        ("regressor", LinearRegression())
-    ])
+    model = Pipeline(
+        steps=[
+            (
+                "preprocessor",
+                preprocessor
+            ),
+            (
+                "regressor",
+                LinearRegression()
+            )
+        ]
+    )
 
     model.fit(X, y)
 
     predictions = model.predict(X)
 
-    mae = mean_absolute_error(y, predictions)
-    mse = mean_squared_error(y, predictions)
+    mae = mean_absolute_error(
+        y,
+        predictions
+    )
+
+    mse = mean_squared_error(
+        y,
+        predictions
+    )
+
     rmse = mse ** 0.5
-    r2 = r2_score(y, predictions)
+
+    r2 = r2_score(
+        y,
+        predictions
+    )
 
     model_metrics = {
         "mae": round(float(mae), 3),
@@ -330,17 +410,17 @@ def train_model():
         )
     }
 
-    print("Model trained successfully!")
+    print("MODEL TRAINED SUCCESSFULLY")
     print("Dataset rows:", len(movie_df))
-    print("Average rating:", round(float(movie_df["rating"].mean()), 2))
+    print("Average rating:", round(float(y.mean()), 2))
     print("MAE:", model_metrics["mae"])
     print("RMSE:", model_metrics["rmse"])
-    print("R2 Score:", model_metrics["r2"])
+    print("R2:", model_metrics["r2"])
 
 
-# --------------------------------------------------
+# ==================================================
 # LOGIN REQUIRED
-# --------------------------------------------------
+# ==================================================
 
 def login_required(function):
 
@@ -348,17 +428,24 @@ def login_required(function):
     def wrapper(*args, **kwargs):
 
         if "user_id" not in session:
-            flash("Please login first.", "error")
-            return redirect(url_for("login"))
+
+            flash(
+                "Please login first.",
+                "error"
+            )
+
+            return redirect(
+                url_for("login")
+            )
 
         return function(*args, **kwargs)
 
     return wrapper
 
 
-# --------------------------------------------------
+# ==================================================
 # ADMIN REQUIRED
-# --------------------------------------------------
+# ==================================================
 
 def admin_required(function):
 
@@ -366,34 +453,53 @@ def admin_required(function):
     def wrapper(*args, **kwargs):
 
         if "user_id" not in session:
-            flash("Please login first.", "error")
-            return redirect(url_for("login"))
+
+            flash(
+                "Please login first.",
+                "error"
+            )
+
+            return redirect(
+                url_for("login")
+            )
 
         if session.get("role") != "admin":
-            flash("Admin access only.", "error")
-            return redirect(url_for("dashboard"))
+
+            flash(
+                "Admin access only.",
+                "error"
+            )
+
+            return redirect(
+                url_for("dashboard")
+            )
 
         return function(*args, **kwargs)
 
     return wrapper
 
 
-# --------------------------------------------------
+# ==================================================
 # HOME
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/")
 def index():
 
     if "user_id" in session:
-        return redirect(url_for("dashboard"))
 
-    return redirect(url_for("login"))
+        return redirect(
+            url_for("dashboard")
+        )
+
+    return redirect(
+        url_for("login")
+    )
 
 
-# --------------------------------------------------
+# ==================================================
 # REGISTER
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -417,19 +523,37 @@ def register():
         )
 
         if not username or not email or not password:
-            flash("Please fill all fields.", "error")
-            return redirect(url_for("register"))
+
+            flash(
+                "Please fill all fields.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
 
         if password != confirm_password:
-            flash("Passwords do not match.", "error")
-            return redirect(url_for("register"))
+
+            flash(
+                "Passwords do not match.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
 
         if len(password) < 6:
+
             flash(
                 "Password must contain at least 6 characters.",
                 "error"
             )
-            return redirect(url_for("register"))
+
+            return redirect(
+                url_for("register")
+            )
 
         conn = get_db()
 
@@ -457,7 +581,9 @@ def register():
                 "success"
             )
 
-            return redirect(url_for("login"))
+            return redirect(
+                url_for("login")
+            )
 
         except sqlite3.IntegrityError:
 
@@ -466,17 +592,22 @@ def register():
                 "error"
             )
 
-            return redirect(url_for("register"))
+            return redirect(
+                url_for("register")
+            )
 
         finally:
+
             conn.close()
 
-    return render_template("register.html")
+    return render_template(
+        "register.html"
+    )
 
 
-# --------------------------------------------------
+# ==================================================
 # LOGIN
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -494,7 +625,8 @@ def login():
         conn = get_db()
 
         user = conn.execute("""
-            SELECT * FROM users
+            SELECT *
+            FROM users
             WHERE username = ?
         """, (username,)).fetchone()
 
@@ -514,13 +646,16 @@ def login():
                 )
 
             except (ValueError, TypeError):
+
                 password_valid = False
 
-            # Support old plain-text passwords
+            # OLD PLAIN TEXT PASSWORD SUPPORT
+
             if (
                 not password_valid
                 and stored_password == password
             ):
+
                 password_valid = True
 
             if password_valid:
@@ -528,23 +663,35 @@ def login():
                 session.clear()
 
                 session["user_id"] = user["id"]
+
                 session["username"] = user["username"]
+
                 session["email"] = user["email"]
+
                 session["role"] = user["role"] or "user"
 
-                flash("Login successful.", "success")
+                flash(
+                    "Login successful.",
+                    "success"
+                )
 
-                return redirect(url_for("dashboard"))
+                return redirect(
+                    url_for("dashboard")
+                )
 
-        flash("Invalid username or password.", "error")
+        flash(
+            "Invalid username or password.",
+            "error"
+        )
 
-    return render_template("login.html")
+    return render_template(
+        "login.html"
+    )
 
 
-# --------------------------------------------------
+# ==================================================
 # DASHBOARD
-# --------------------------------------------------
-
+# ==================================================
 
 @app.route("/dashboard")
 @login_required
@@ -564,7 +711,9 @@ def dashboard():
         SELECT COUNT(*)
         FROM predictions
         WHERE user_id = ?
-    """, (session["user_id"],)).fetchone()[0]
+    """, (
+        session["user_id"],
+    )).fetchone()[0]
 
     recent_predictions = conn.execute("""
         SELECT *
@@ -572,43 +721,37 @@ def dashboard():
         WHERE user_id = ?
         ORDER BY id DESC
         LIMIT 5
-    """, (session["user_id"],)).fetchall()
+    """, (
+        session["user_id"],
+    )).fetchall()
 
     conn.close()
 
-    # Load dataset and calculate statistics
     total_movies = 0
+
     average_rating = 0.0
 
     try:
 
         dashboard_df = load_dataset()
 
-        dashboard_df["rating"] = pd.to_numeric(
-            dashboard_df["rating"],
-            errors="coerce"
-        )
-
-        valid_ratings = dashboard_df["rating"].dropna()
-
         total_movies = len(dashboard_df)
 
-        if not valid_ratings.empty:
+        average_rating = round(
+            float(dashboard_df["rating"].mean()),
+            2
+        )
 
-            average_rating = round(
-                float(valid_ratings.mean()),
-                2
-            )
+        print("DASHBOARD TOTAL MOVIES:", total_movies)
 
-        print("--------------------------------")
-        print("DASHBOARD DATA CHECK")
-        print("Total Movies:", total_movies)
-        print("Average Rating:", average_rating)
-        print("--------------------------------")
+        print("DASHBOARD AVERAGE RATING:", average_rating)
 
     except Exception as error:
 
-        print("DASHBOARD DATA ERROR:", str(error))
+        print(
+            "DASHBOARD DATA ERROR:",
+            str(error)
+        )
 
     return render_template(
         "dashboard.html",
@@ -617,13 +760,14 @@ def dashboard():
         total_users=total_users,
         total_predictions=total_predictions,
         user_predictions=user_predictions,
-        recent_predictions=recent_predictions
+        recent_predictions=recent_predictions,
+        model_metrics=model_metrics
     )
 
 
-# --------------------------------------------------
+# ==================================================
 # MOVIE RATING PREDICTION
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/prediction", methods=["GET", "POST"])
 @login_required
@@ -631,20 +775,27 @@ def prediction():
 
     if request.method == "POST":
 
+        conn = None
+
         try:
 
             if model is None:
+
                 raise ValueError(
-                    "Machine learning model is not available."
+                    "Machine learning model is not available. Check dataset."
                 )
 
             movie_title = request.form.get(
                 "movie_title",
-                request.form.get("title", "New Movie")
+                request.form.get(
+                    "title",
+                    "New Movie"
+                )
             ).strip()
 
             genre = request.form.get(
-                "genre", ""
+                "genre",
+                ""
             ).strip()
 
             year = float(
@@ -660,24 +811,29 @@ def prediction():
             )
 
             if not genre:
+
                 raise ValueError(
                     "Please select a movie genre."
                 )
 
             if not movie_title:
+
                 movie_title = "New Movie"
 
             if year < 1888 or year > 2100:
+
                 raise ValueError(
                     "Please enter a valid release year."
                 )
 
             if duration_mins <= 0:
+
                 raise ValueError(
                     "Duration must be greater than zero."
                 )
 
             if votes < 0:
+
                 raise ValueError(
                     "Votes cannot be negative."
                 )
@@ -727,7 +883,6 @@ def prediction():
             ))
 
             conn.commit()
-            conn.close()
 
             return render_template(
                 "prediction.html",
@@ -742,12 +897,19 @@ def prediction():
                 "error"
             )
 
-    return render_template("prediction.html")
+        finally:
+
+            if conn is not None:
+                conn.close()
+
+    return render_template(
+        "prediction.html"
+    )
 
 
-# --------------------------------------------------
+# ==================================================
 # ANALYTICS
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/analytics")
 @login_required
@@ -755,49 +917,7 @@ def analytics():
 
     try:
 
-        if movie_df.empty:
-            df = load_dataset()
-        else:
-            df = movie_df.copy()
-
-        df["genre"] = (
-            df["genre"]
-            .fillna("Unknown")
-            .astype(str)
-            .str.strip()
-        )
-
-        df["title"] = (
-            df["title"]
-            .fillna("Untitled")
-            .astype(str)
-            .str.strip()
-        )
-
-        df["rating"] = pd.to_numeric(
-            df["rating"],
-            errors="coerce"
-        )
-
-        df["votes"] = pd.to_numeric(
-            df["votes"],
-            errors="coerce"
-        )
-
-        df = df.dropna(
-            subset=["rating", "votes"]
-        )
-
-        df = df[
-            (df["rating"] >= 0) &
-            (df["rating"] <= 10) &
-            (df["votes"] >= 0)
-        ].copy()
-
-        if df.empty:
-            raise ValueError(
-                "No valid movie records found."
-            )
+        df = load_dataset()
 
         total_movies = len(df)
 
@@ -816,7 +936,8 @@ def analytics():
             2
         )
 
-        # Rating distribution
+        # RATING DISTRIBUTION
+
         rating_labels = [
             "0-1", "1-2", "2-3", "3-4", "4-5",
             "5-6", "6-7", "7-8", "8-9", "9-10"
@@ -840,9 +961,12 @@ def analytics():
                     (df["rating"] < i + 1)
                 ).sum()
 
-            rating_counts.append(int(count))
+            rating_counts.append(
+                int(count)
+            )
 
-        # Genre analysis
+        # GENRE ANALYSIS
+
         genre_data = df.groupby("genre").agg(
             movie_count=("id", "count"),
             average_rating=("rating", "mean")
@@ -864,7 +988,8 @@ def analytics():
             for value in genre_data["average_rating"].tolist()
         ]
 
-        # Top 10 movies by votes
+        # TOP 10 MOVIES BY VOTES
+
         votes_sample = df.sort_values(
             by="votes",
             ascending=False
@@ -890,24 +1015,30 @@ def analytics():
             genre_counts=genre_counts,
             genre_ratings=genre_ratings,
             votes_labels=votes_labels,
-            votes_values=votes_values
+            votes_values=votes_values,
+            model_metrics=model_metrics
         )
 
     except Exception as error:
 
-        print("ANALYTICS ERROR:", error)
+        print(
+            "ANALYTICS ERROR:",
+            str(error)
+        )
 
         flash(
             "Unable to load analytics: " + str(error),
             "error"
         )
 
-        return redirect(url_for("dashboard"))
+        return redirect(
+            url_for("dashboard")
+        )
 
 
-# --------------------------------------------------
+# ==================================================
 # DATASET
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/dataset")
 @login_required
@@ -925,22 +1056,24 @@ def dataset():
         if selected_genre != "All Genres":
 
             df = df[
-                df["genre"].str.lower() ==
-                selected_genre.lower()
+                df["genre"].str.lower()
+                == selected_genre.lower()
             ]
 
         movies = df.to_dict(
             orient="records"
         )
 
+        all_df = load_dataset()
+
         genres = sorted(
-            movie_df["genre"]
+            all_df["genre"]
             .dropna()
             .unique()
             .tolist()
         )
 
-        total_movies = len(movie_df)
+        total_movies = len(all_df)
 
         return render_template(
             "dataset.html",
@@ -952,19 +1085,24 @@ def dataset():
 
     except Exception as error:
 
-        print("DATASET ERROR:", error)
+        print(
+            "DATASET ERROR:",
+            str(error)
+        )
 
         flash(
             "Unable to load dataset: " + str(error),
             "error"
         )
 
-        return redirect(url_for("dashboard"))
+        return redirect(
+            url_for("dashboard")
+        )
 
 
-# --------------------------------------------------
+# ==================================================
 # PROFILE
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/profile")
 @login_required
@@ -997,9 +1135,9 @@ def profile():
     )
 
 
-# --------------------------------------------------
+# ==================================================
 # FEEDBACK
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/feedback", methods=["GET", "POST"])
 @login_required
@@ -1019,12 +1157,17 @@ def feedback():
                 "error"
             )
 
-            return redirect(url_for("feedback"))
+            return redirect(
+                url_for("feedback")
+            )
 
         conn = get_db()
 
         conn.execute("""
-            INSERT INTO feedback (user_id, message)
+            INSERT INTO feedback (
+                user_id,
+                message
+            )
             VALUES (?, ?)
         """, (
             session["user_id"],
@@ -1032,6 +1175,7 @@ def feedback():
         ))
 
         conn.commit()
+
         conn.close()
 
         flash(
@@ -1039,14 +1183,18 @@ def feedback():
             "success"
         )
 
-        return redirect(url_for("feedback"))
+        return redirect(
+            url_for("feedback")
+        )
 
-    return render_template("feedback.html")
+    return render_template(
+        "feedback.html"
+    )
 
 
-# --------------------------------------------------
+# ==================================================
 # ADMIN DASHBOARD
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/admin")
 @login_required
@@ -1071,7 +1219,11 @@ def admin():
     """).fetchone()[0]
 
     users = conn.execute("""
-        SELECT id, username, email, role
+        SELECT
+            id,
+            username,
+            email,
+            role
         FROM users
         ORDER BY id DESC
     """).fetchall()
@@ -1104,20 +1256,61 @@ def admin():
 
     conn.close()
 
+    # ADMIN DATASET STATISTICS
+
+    total_movies = 0
+
+    average_rating = 0.0
+
+    dataset_error = None
+
+    try:
+
+        admin_df = load_dataset()
+
+        total_movies = len(admin_df)
+
+        average_rating = round(
+            float(admin_df["rating"].mean()),
+            2
+        )
+
+        print(
+            "ADMIN TOTAL MOVIES:",
+            total_movies
+        )
+
+        print(
+            "ADMIN AVERAGE RATING:",
+            average_rating
+        )
+
+    except Exception as error:
+
+        dataset_error = str(error)
+
+        print(
+            "ADMIN DATASET ERROR:",
+            dataset_error
+        )
+
     return render_template(
         "admin.html",
         total_users=total_users,
         total_predictions=total_predictions,
         total_feedback=total_feedback,
+        total_movies=total_movies,
+        average_rating=average_rating,
+        dataset_error=dataset_error,
         users=users,
         predictions=predictions,
         feedback_list=feedback_list
     )
 
 
-# --------------------------------------------------
+# ==================================================
 # LOGOUT
-# --------------------------------------------------
+# ==================================================
 
 @app.route("/logout")
 def logout():
@@ -1129,12 +1322,14 @@ def logout():
         "success"
     )
 
-    return redirect(url_for("login"))
+    return redirect(
+        url_for("login")
+    )
 
 
-# --------------------------------------------------
-# START APPLICATION
-# --------------------------------------------------
+# ==================================================
+# APPLICATION STARTUP
+# ==================================================
 
 init_db()
 
@@ -1146,9 +1341,13 @@ except Exception as error:
 
     print(
         "MODEL TRAINING ERROR:",
-        error
+        str(error)
     )
 
+
+# ==================================================
+# RUN APPLICATION
+# ==================================================
 
 if __name__ == "__main__":
 
