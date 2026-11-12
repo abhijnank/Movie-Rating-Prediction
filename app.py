@@ -1,4 +1,3 @@
-
 import os
 import sqlite3
 import pandas as pd
@@ -546,6 +545,7 @@ def login():
 # DASHBOARD
 # --------------------------------------------------
 
+
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -564,9 +564,7 @@ def dashboard():
         SELECT COUNT(*)
         FROM predictions
         WHERE user_id = ?
-    """, (
-        session["user_id"],
-    )).fetchone()[0]
+    """, (session["user_id"],)).fetchone()[0]
 
     recent_predictions = conn.execute("""
         SELECT *
@@ -574,50 +572,43 @@ def dashboard():
         WHERE user_id = ?
         ORDER BY id DESC
         LIMIT 5
-    """, (
-        session["user_id"],
-    )).fetchall()
+    """, (session["user_id"],)).fetchall()
 
     conn.close()
 
-    # Dataset statistics
+    # Load dataset and calculate statistics
     total_movies = 0
     average_rating = 0.0
 
     try:
 
-        if movie_df.empty:
-            dashboard_df = load_dataset()
-        else:
-            dashboard_df = movie_df.copy()
+        dashboard_df = load_dataset()
 
-        if "rating" in dashboard_df.columns:
+        dashboard_df["rating"] = pd.to_numeric(
+            dashboard_df["rating"],
+            errors="coerce"
+        )
 
-            ratings = pd.to_numeric(
-                dashboard_df["rating"],
-                errors="coerce"
-            ).dropna()
+        valid_ratings = dashboard_df["rating"].dropna()
 
-            ratings = ratings[
-                (ratings >= 0) &
-                (ratings <= 10)
-            ]
+        total_movies = len(dashboard_df)
 
-            total_movies = len(dashboard_df)
+        if not valid_ratings.empty:
 
-            if not ratings.empty:
+            average_rating = round(
+                float(valid_ratings.mean()),
+                2
+            )
 
-                average_rating = round(
-                    float(ratings.mean()),
-                    2
-                )
+        print("--------------------------------")
+        print("DASHBOARD DATA CHECK")
+        print("Total Movies:", total_movies)
+        print("Average Rating:", average_rating)
+        print("--------------------------------")
 
     except Exception as error:
 
-        print("DASHBOARD DATA ERROR:", error)
-
-    print("Dashboard total movies:", total_movies)
-    print("Dashboard average rating:", average_rating)
+        print("DASHBOARD DATA ERROR:", str(error))
 
     return render_template(
         "dashboard.html",
