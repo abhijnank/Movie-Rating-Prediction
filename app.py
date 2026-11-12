@@ -765,6 +765,7 @@ def dashboard():
     )
 
 
+
 # ==================================================
 # MOVIE RATING PREDICTION
 # ==================================================
@@ -780,63 +781,39 @@ def prediction():
         try:
 
             if model is None:
-
                 raise ValueError(
                     "Machine learning model is not available. Check dataset."
                 )
 
             movie_title = request.form.get(
-                "movie_title",
-                request.form.get(
-                    "title",
-                    "New Movie"
-                )
+                "title",
+                request.form.get("movie_title", "New Movie")
             ).strip()
 
-            genre = request.form.get(
-                "genre",
-                ""
-            ).strip()
+            genre = request.form.get("genre", "").strip()
 
-            year = float(
-                request.form.get("year", "")
-            )
+            year = float(request.form.get("year", ""))
 
             duration_mins = float(
                 request.form.get("duration_mins", "")
             )
 
-            votes = float(
-                request.form.get("votes", "")
-            )
+            votes = float(request.form.get("votes", ""))
 
             if not genre:
-
-                raise ValueError(
-                    "Please select a movie genre."
-                )
+                raise ValueError("Please select a movie genre.")
 
             if not movie_title:
-
                 movie_title = "New Movie"
 
             if year < 1888 or year > 2100:
-
-                raise ValueError(
-                    "Please enter a valid release year."
-                )
+                raise ValueError("Please enter a valid release year.")
 
             if duration_mins <= 0:
-
-                raise ValueError(
-                    "Duration must be greater than zero."
-                )
+                raise ValueError("Duration must be greater than zero.")
 
             if votes < 0:
-
-                raise ValueError(
-                    "Votes cannot be negative."
-                )
+                raise ValueError("Votes cannot be negative.")
 
             input_data = pd.DataFrame([{
                 "genre": genre,
@@ -855,8 +832,7 @@ def prediction():
             )
 
             predicted_rating = round(
-                predicted_rating,
-                2
+                predicted_rating, 2
             )
 
             conn = get_db()
@@ -902,8 +878,12 @@ def prediction():
             if conn is not None:
                 conn.close()
 
+    # IMPORTANT: Pass None during GET request
+
     return render_template(
-        "prediction.html"
+        "prediction.html",
+        predicted_rating=None,
+        result=None
     )
 
 
