@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -253,7 +252,6 @@
 
 <body>
 
-<!-- Navigation -->
 <nav class="navbar">
 
     <div class="brand">
@@ -262,46 +260,29 @@
 
     <div class="nav-links">
 
-        <a href="{{ url_for('dashboard') }}" class="active">
-            Dashboard
-        </a>
+        <a href="{{ url_for('dashboard') }}" class="active">Dashboard</a>
 
-        <a href="{{ url_for('prediction') }}">
-            Prediction
-        </a>
+        <a href="{{ url_for('prediction') }}">Prediction</a>
 
-        <a href="{{ url_for('analytics') }}">
-            Analytics
-        </a>
+        <a href="{{ url_for('analytics') }}">Analytics</a>
 
-        <a href="{{ url_for('dataset') }}">
-            Dataset
-        </a>
+        <a href="{{ url_for('dataset') }}">Dataset</a>
 
-        <a href="{{ url_for('profile') }}">
-            Profile
-        </a>
+        <a href="{{ url_for('profile') }}">Profile</a>
 
-        <a href="{{ url_for('feedback') }}">
-            Feedback
-        </a>
+        <a href="{{ url_for('feedback') }}">Feedback</a>
 
         {% if session.get('role') == 'admin' %}
-        <a href="{{ url_for('admin') }}">
-            Admin
-        </a>
+        <a href="{{ url_for('admin') }}">Admin</a>
         {% endif %}
 
-        <a href="{{ url_for('logout') }}" class="logout">
-            Logout
-        </a>
+        <a href="{{ url_for('logout') }}" class="logout">Logout</a>
 
     </div>
 
 </nav>
 
 
-<!-- Main Dashboard -->
 <div class="container">
 
     <div class="welcome">
@@ -319,44 +300,66 @@
     </div>
 
 
-    <!-- Dashboard Statistics -->
     <div class="stats-grid">
 
         <div class="stat-card">
+
             <div class="stat-icon">🎬</div>
+
             <h3>Total Pre-loaded Movies</h3>
+
             <h2>{{ total_movies|default(0) }}</h2>
+
             <p>Movies in dataset</p>
+
         </div>
 
+
         <div class="stat-card">
+
             <div class="stat-icon">⭐</div>
+
             <h3>Average IMDb Rating</h3>
+
             <h2>{{ avg_rating|default('0.0') }}</h2>
+
             <p>Average dataset rating</p>
+
         </div>
 
+
         <div class="stat-card">
+
             <div class="stat-icon">📊</div>
+
             <h3>Model Algorithm</h3>
+
             <h2 style="font-size:20px;">Linear Regression</h2>
+
             <p>Machine Learning Model</p>
+
         </div>
 
+
         <div class="stat-card">
+
             <div class="stat-icon">🔮</div>
+
             <h3>Active Predictions</h3>
-            <h2>{{ avg_rating|default('0.0') }}</h2>
+
+            <h2>{{ user_predictions|default(0) }}</h2>
+
             <p>Your prediction activity</p>
+
         </div>
 
     </div>
 
 
-    <!-- Project Information -->
     <h2 class="section-title">
         Machine Learning Overview
     </h2>
+
 
     <div class="content-grid">
 
@@ -422,6 +425,7 @@
                margin-top:25px;">
 
                 Start Movie Prediction →
+
             </a>
 
             <p style="margin-top:20px;">
@@ -434,58 +438,63 @@
     </div>
 
 
-    <!-- Quick Navigation -->
     <h2 class="section-title" style="margin-top:35px;">
         Explore Your Project
     </h2>
 
+
     <div class="quick-links">
 
-        <a href="{{ url_for('prediction') }}"
-           class="quick-card">
+        <a href="{{ url_for('prediction') }}" class="quick-card">
 
             <div class="icon">🔮</div>
+
             <h3>Movie Prediction</h3>
+
             <p>Enter movie details and predict its IMDb rating.</p>
 
         </a>
 
 
-        <a href="{{ url_for('analytics') }}"
-           class="quick-card">
+        <a href="{{ url_for('analytics') }}" class="quick-card">
 
             <div class="icon">📈</div>
+
             <h3>Analytics</h3>
+
             <p>Explore movie rating charts and statistics.</p>
 
         </a>
 
 
-        <a href="{{ url_for('dataset') }}"
-           class="quick-card">
+        <a href="{{ url_for('dataset') }}" class="quick-card">
 
             <div class="icon">📁</div>
+
             <h3>Dataset</h3>
+
             <p>View the pre-loaded movie dataset.</p>
 
         </a>
 
 
-        <a href="{{ url_for('profile') }}"
-           class="quick-card">
+        <a href="{{ url_for('profile') }}" class="quick-card">
 
             <div class="icon">👤</div>
+
             <h3>My Profile</h3>
+
             <p>View and manage your account information.</p>
 
         </a>
 
 
-        <a href="{{ url_for('feedback') }}"
-           class="quick-card">
+        <a href="{{ url_for('feedback') }}" class="quick-card">
 
             <div class="icon">💬</div>
+
             <h3>Feedback</h3>
+
             <p>Share your feedback about the application.</p>
 
         </a>
@@ -493,11 +502,12 @@
 
         {% if session.get('role') == 'admin' %}
 
-        <a href="{{ url_for('admin') }}"
-           class="quick-card">
+        <a href="{{ url_for('admin') }}" class="quick-card">
 
             <div class="icon">⚙️</div>
+
             <h3>Admin Panel</h3>
+
             <p>Manage users and monitor predictions.</p>
 
         </a>
@@ -509,7 +519,6 @@
 </div>
 
 
-<!-- Footer -->
 <footer class="footer">
 
     © 2026 Movie Rating Predictor Pro.
