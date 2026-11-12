@@ -622,7 +622,7 @@ def dashboard():
     return render_template(
         "dashboard.html",
         total_movies=total_movies,
-        average_rating=average_rating,
+        avg_rating=average_rating,
         total_users=total_users,
         total_predictions=total_predictions,
         user_predictions=user_predictions,
