@@ -136,6 +136,13 @@
             margin: 0;
         }
 
+        .stat-card small {
+            display: block;
+            color: #91a9c1;
+            margin-top: 9px;
+            font-size: 12px;
+        }
+
         .section-card {
             background: #142a40;
             border: 1px solid #29435e;
@@ -235,6 +242,16 @@
             background: #365d7e;
         }
 
+        .error-message {
+            background: #542b35;
+            border: 1px solid #9f4555;
+            color: #fecdd3;
+            padding: 13px 16px;
+            border-radius: 8px;
+            margin-bottom: 22px;
+            font-size: 13px;
+        }
+
         .footer {
             text-align: center;
             padding: 22px;
@@ -320,7 +337,17 @@
     </div>
 
 
-    <!-- Statistics -->
+    {% if dataset_error %}
+        <div class="error-message">
+            <strong>Dataset Loading Error:</strong>
+            {{ dataset_error }}
+            <br>
+            Please check MovieDataSet.csv in your project folder.
+        </div>
+    {% endif %}
+
+
+    <!-- STATISTICS -->
 
     <div class="stats-grid">
 
@@ -340,12 +367,15 @@
             <div class="stat-icon">🎬</div>
             <p>Total Movies in Dataset</p>
             <h2>{{ total_movies|default(0) }}</h2>
+            <small>
+                Average IMDb Rating: {{ average_rating|default(0) }}/10
+            </small>
         </div>
 
     </div>
 
 
-    <!-- Registered Users -->
+    <!-- REGISTERED USERS -->
 
     <div class="section-card">
 
@@ -370,14 +400,8 @@
 
                     <tr>
                         <td>{{ user['id'] }}</td>
-
-                        <td>
-                            {{ user['username'] }}
-                        </td>
-
-                        <td>
-                            {{ user['email'] }}
-                        </td>
+                        <td>{{ user['username'] }}</td>
+                        <td>{{ user['email'] or 'N/A' }}</td>
 
                         <td>
                             <span class="role-badge">
@@ -405,7 +429,7 @@
     </div>
 
 
-    <!-- Prediction Activity -->
+    <!-- PREDICTION ACTIVITY -->
 
     <div class="section-card">
 
@@ -435,27 +459,29 @@
                         <td>{{ item['id'] }}</td>
 
                         <td>
-                            {{ item['username']|default('User') }}
+                            {{ item['username'] or 'User' }}
                         </td>
 
                         <td>
-                            {{ item['title']|default('N/A') }}
+                            {{ item['movie_title'] or 'N/A' }}
                         </td>
 
                         <td>
-                            {{ item['genre']|default('N/A') }}
+                            {{ item['genre'] or 'N/A' }}
                         </td>
 
                         <td class="rating-value">
+
                             {% if item['predicted_rating'] is not none %}
                                 {{ "%.2f"|format(item['predicted_rating']|float) }}/10
                             {% else %}
                                 N/A
                             {% endif %}
+
                         </td>
 
                         <td>
-                            {{ item['created_at']|default('N/A') }}
+                            {{ item['created_at'] or 'N/A' }}
                         </td>
 
                     </tr>
@@ -479,7 +505,67 @@
     </div>
 
 
-    <!-- Admin Actions -->
+    <!-- FEEDBACK -->
+
+    <div class="section-card">
+
+        <h2>💬 User Feedback</h2>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Feedback Message</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in feedback_list|default([]) %}
+
+                    <tr>
+
+                        <td>{{ item['id'] }}</td>
+
+                        <td>
+                            {{ item['username'] or 'User' }}
+                        </td>
+
+                        <td>
+                            {{ item['message'] }}
+                        </td>
+
+                        <td>
+                            {{ item['created_at'] or 'N/A' }}
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="4" class="empty-message">
+                            No feedback records found.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADMIN ACTIONS -->
 
     <div class="admin-actions">
 
