@@ -10,6 +10,8 @@
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -69,7 +71,7 @@
         }
 
         .container {
-            max-width: 1050px;
+            max-width: 1100px;
             margin: auto;
             padding: 35px 25px;
         }
@@ -374,6 +376,63 @@
             margin: 30px 0;
         }
 
+        /* PREDICTION GRAPH */
+
+        .graph-section {
+            background: #142a40;
+            border: 1px solid #29435e;
+            border-radius: 14px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .graph-heading {
+            color: white;
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .graph-description {
+            color: #9fb1c5;
+            font-size: 13px;
+            margin-bottom: 22px;
+        }
+
+        .total-box {
+            background: #0d2034;
+            border: 1px solid #36516d;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .total-box h3 {
+            color: #9fb1c5;
+            font-size: 14px;
+            margin: 0 0 10px;
+        }
+
+        .total-box h1 {
+            color: #60a5fa;
+            font-size: 38px;
+            margin: 0;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 350px;
+            position: relative;
+        }
+
+        .no-data {
+            color: #9fb1c5;
+            text-align: center;
+            padding: 35px 10px;
+            font-size: 14px;
+        }
+
         .footer {
             text-align: center;
             padding: 25px;
@@ -414,6 +473,15 @@
 
             .result-btn {
                 width: 100%;
+                text-align: center;
+            }
+
+            .graph-section {
+                padding: 18px;
+            }
+
+            .chart-container {
+                height: 300px;
             }
         }
     </style>
@@ -421,7 +489,7 @@
 
 <body>
 
-<!-- Navigation -->
+<!-- NAVIGATION -->
 
 <nav class="navbar">
 
@@ -458,7 +526,7 @@
 </nav>
 
 
-<!-- Main Content -->
+<!-- MAIN CONTENT -->
 
 <div class="container">
 
@@ -476,7 +544,7 @@
 
     <div class="prediction-card">
 
-        <!-- Flash Messages -->
+        <!-- FLASH MESSAGES -->
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
@@ -511,7 +579,7 @@
                 </p>
 
 
-                <!-- Speedometer Gauge -->
+                <!-- SPEEDOMETER -->
 
                 <div class="gauge-wrapper">
 
@@ -533,9 +601,7 @@
                     <div class="gauge-labels">
 
                         <span>0</span>
-
                         <span>5</span>
-
                         <span>10</span>
 
                     </div>
@@ -609,16 +675,16 @@
                 <div class="form-grid">
 
 
-                    <!-- Movie Title -->
+                    <!-- MOVIE TITLE -->
 
                     <div class="form-group full-width">
 
-                        <label for="title">Movie Title</label>
+                        <label for="movie_title">Movie Title</label>
 
                         <input
                             type="text"
-                            id="title"
-                            name="title"
+                            id="movie_title"
+                            name="movie_title"
                             placeholder="Enter movie title"
                             required
                         >
@@ -626,7 +692,7 @@
                     </div>
 
 
-                    <!-- Genre -->
+                    <!-- GENRE -->
 
                     <div class="form-group">
 
@@ -651,7 +717,7 @@
                     </div>
 
 
-                    <!-- Release Year -->
+                    <!-- RELEASE YEAR -->
 
                     <div class="form-group">
 
@@ -670,7 +736,7 @@
                     </div>
 
 
-                    <!-- Duration -->
+                    <!-- DURATION -->
 
                     <div class="form-group">
 
@@ -691,7 +757,7 @@
                     </div>
 
 
-                    <!-- Votes -->
+                    <!-- VOTES -->
 
                     <div class="form-group">
 
@@ -750,10 +816,192 @@
 
     </div>
 
+
+    <!-- MOVIE PREDICTION GRAPH -->
+
+    <div class="graph-section">
+
+        <h2 class="graph-heading">
+            📊 Movie Prediction Statistics
+        </h2>
+
+        <p class="graph-description">
+            Movie-wise prediction count from all users.
+        </p>
+
+
+        <!-- TOTAL PREDICTIONS -->
+
+        <div class="total-box">
+
+            <h3>Total Predictions</h3>
+
+            <h1>{{ total_predictions|default(0) }}</h1>
+
+        </div>
+
+
+        <!-- GRAPH -->
+
+        {% if movie_labels and movie_counts %}
+
+            <div class="chart-container">
+
+                <canvas id="moviePredictionChart"></canvas>
+
+            </div>
+
+        {% else %}
+
+            <div class="no-data">
+                No prediction records available yet.
+                Make a movie prediction to see the graph.
+            </div>
+
+        {% endif %}
+
+    </div>
+
 </div>
 
 
-<!-- Footer -->
+<!-- GRAPH SCRIPT -->
+
+{% if movie_labels and movie_counts %}
+
+<script>
+
+    const movieLabels = {{ movie_labels | tojson }};
+    const movieCounts = {{ movie_counts | tojson }};
+
+    const chartCanvas = document.getElementById(
+        'moviePredictionChart'
+    );
+
+    new Chart(chartCanvas, {
+
+        type: 'bar',
+
+        data: {
+
+            labels: movieLabels,
+
+            datasets: [{
+
+                label: 'Number of Predictions',
+
+                data: movieCounts,
+
+                backgroundColor: '#3498db',
+
+                borderColor: '#60a5fa',
+
+                borderWidth: 1,
+
+                borderRadius: 7,
+
+                maxBarThickness: 65
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+
+                    labels: {
+                        color: '#dbeafe'
+                    }
+
+                },
+
+                title: {
+
+                    display: true,
+
+                    text: 'Movie Name vs Number of Predictions',
+
+                    color: '#ffffff',
+
+                    font: {
+                        size: 16
+                    }
+
+                }
+
+            },
+
+            scales: {
+
+                x: {
+
+                    ticks: {
+                        color: '#cbd5e1'
+                    },
+
+                    grid: {
+                        color: 'rgba(255,255,255,0.05)'
+                    },
+
+                    title: {
+
+                        display: true,
+
+                        text: 'Movie Name',
+
+                        color: '#9fb1c5'
+
+                    }
+
+                },
+
+                y: {
+
+                    beginAtZero: true,
+
+                    ticks: {
+
+                        precision: 0,
+
+                        color: '#cbd5e1'
+
+                    },
+
+                    grid: {
+                        color: 'rgba(255,255,255,0.08)'
+                    },
+
+                    title: {
+
+                        display: true,
+
+                        text: 'Prediction Count',
+
+                        color: '#9fb1c5'
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+</script>
+
+{% endif %}
+
+
+<!-- FOOTER -->
 
 <footer class="footer">
 
