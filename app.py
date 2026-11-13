@@ -770,121 +770,89 @@ def dashboard():
 # MOVIE RATING PREDICTION
 # ==================================================
 
-@app.route("/prediction", methods=["GET", "POST"])
+@app.route('/prediction', methods=['GET', 'POST'])
 @login_required
 def prediction():
 
-    if request.method == "POST":
+    conn = get_db_connection()
 
-        conn = None
+    predicted_rating = None
+    result = None
+
+    if request.method == 'POST':
+        movie_title = request.form.get('movie_title', '').strip()
+        genre = request.form.get('genre', '').strip()
+        year = request.form.get('year')
+        duration_mins = request.form.get('duration_mins')
+        votes = request.form.get('votes')
 
         try:
-
-            if model is None:
-                raise ValueError(
-                    "Machine learning model is not available. Check dataset."
-                )
-
-            movie_title = request.form.get(
-                "title",
-                request.form.get("movie_title", "New Movie")
-            ).strip()
-
-            genre = request.form.get("genre", "").strip()
-
-            year = float(request.form.get("year", ""))
-
-            duration_mins = float(
-                request.form.get("duration_mins", "")
-            )
-
-            votes = float(request.form.get("votes", ""))
-
-            if not genre:
-                raise ValueError("Please select a movie genre.")
-
-            if not movie_title:
-                movie_title = "New Movie"
-
-            if year < 1888 or year > 2100:
-                raise ValueError("Please enter a valid release year.")
-
-            if duration_mins <= 0:
-                raise ValueError("Duration must be greater than zero.")
-
-            if votes < 0:
-                raise ValueError("Votes cannot be negative.")
+            year = int(year)
+            duration_mins = float(duration_mins)
+            votes = float(votes)
 
             input_data = pd.DataFrame([{
-                "genre": genre,
-                "year": year,
-                "duration_mins": duration_mins,
-                "votes": votes
+                'genre': genre,
+                'year': year,
+                'duration_mins': duration_mins,
+                'votes': votes
             }])
 
-            predicted_rating = float(
-                model.predict(input_data)[0]
-            )
-
-            predicted_rating = max(
-                0,
-                min(10, predicted_rating)
-            )
-
-            predicted_rating = round(
-                predicted_rating, 2
-            )
-
-            conn = get_db()
+            predicted_rating = float(model.predict(input_data)[0])
+            predicted_rating = round(max(0, min(10, predicted_rating)), 2)
 
             conn.execute("""
-                INSERT INTO predictions (
-                    user_id,
-                    movie_title,
-                    genre,
-                    year,
-                    duration_mins,
-                    votes,
-                    predicted_rating
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO predictions
+                (user_id, movie_title, genre, year, duration_mins,
+                 votes, predicted_rating, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """, (
-                session["user_id"],
+                session['user_id'],
                 movie_title,
                 genre,
-                int(year),
+                year,
                 duration_mins,
                 votes,
                 predicted_rating
             ))
 
             conn.commit()
+            result = predicted_rating
 
-            return render_template(
-                "prediction.html",
-                predicted_rating=predicted_rating,
-                result=predicted_rating
-            )
+        except (ValueError, TypeError):
+            flash('Please enter valid movie details.', 'error')
 
-        except Exception as error:
+    # Total predictions from all users
+    total_predictions = conn.execute("""
+        SELECT COUNT(*) FROM predictions
+    """).fetchone()[0]
 
-            flash(
-                "Prediction error: " + str(error),
-                "error"
-            )
+    # Movie-wise prediction counts
+    movie_data = conn.execute("""
+        SELECT movie_title, COUNT(*) AS prediction_count
+        FROM predictions
+        WHERE movie_title IS NOT NULL
+          AND TRIM(movie_title) != ''
+        GROUP BY movie_title
+        ORDER BY prediction_count DESC
+        LIMIT 10
+    """).fetchall()
 
-        finally:
+    movie_labels = [row['movie_title'] for row in movie_data]
+    movie_counts = [row['prediction_count'] for row in movie_data]
 
-            if conn is not None:
-                conn.close()
-
-    # IMPORTANT: Pass None during GET request
+    conn.close()
 
     return render_template(
-        "prediction.html",
-        predicted_rating=None,
-        result=None
+        'prediction.html',
+        predicted_rating=predicted_rating,
+        result=result,
+        total_predictions=total_predictions,
+        movie_labels=movie_labels,
+        movie_counts=movie_counts
     )
+
+
 
 
 # ==================================================
