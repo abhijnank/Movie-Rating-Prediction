@@ -10,10 +10,7 @@
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
-
         * {
             box-sizing: border-box;
         }
@@ -365,61 +362,6 @@
             transform: translateY(-2px);
         }
 
-        /* DIVIDER */
-
-        .result-divider {
-            border: none;
-            border-top: 1px solid #29435e;
-            margin: 30px 0;
-        }
-
-        /* MOVIE PREDICTION GRAPH */
-
-        .graph-section {
-            background: #142a40;
-            border: 1px solid #29435e;
-            border-radius: 14px;
-            padding: 25px;
-            margin-top: 30px;
-        }
-
-        .graph-heading {
-            color: white;
-            font-size: 22px;
-            margin-top: 0;
-            margin-bottom: 8px;
-        }
-
-        .graph-description {
-            color: #9fb1c5;
-            font-size: 13px;
-            margin-bottom: 22px;
-        }
-
-        .chart-container {
-            width: 100%;
-            height: 370px;
-            position: relative;
-        }
-
-        .no-data {
-            color: #9fb1c5;
-            text-align: center;
-            padding: 35px 10px;
-            font-size: 14px;
-        }
-
-        /* FOOTER */
-
-        .footer {
-            text-align: center;
-            padding: 25px;
-            color: #71869c;
-            border-top: 1px solid #29435e;
-            margin-top: 40px;
-            font-size: 12px;
-        }
-
         /* RESPONSIVE */
 
         @media(max-width: 700px) {
@@ -457,14 +399,6 @@
                 text-align: center;
             }
 
-            .graph-section {
-                padding: 18px;
-            }
-
-            .chart-container {
-                height: 320px;
-            }
-
             .gauge-wrapper {
                 width: 280px;
             }
@@ -479,9 +413,7 @@
                 height: 270px;
             }
         }
-
     </style>
-
 </head>
 
 <body>
@@ -593,24 +525,15 @@
 
                     </div>
 
-
                     <div class="gauge-value">
-
                         {{ "%.2f"|format(rating_value) }}
-
                         <span>/ 10</span>
-
                     </div>
 
-
                     <div class="gauge-labels">
-
                         <span>0</span>
-
                         <span>5</span>
-
                         <span>10</span>
-
                     </div>
 
                 </div>
@@ -622,14 +545,10 @@
 
 
                 <p class="result-message">
-
                     The machine learning model has successfully
                     calculated your movie's estimated rating.
-
                     <br>
-
                     You can predict another movie or return to your dashboard.
-
                 </p>
 
 
@@ -639,16 +558,12 @@
 
                     <a href="{{ url_for('prediction') }}"
                        class="result-btn another-btn">
-
                         🔮 Predict Another Movie
-
                     </a>
 
                     <a href="{{ url_for('dashboard') }}"
                        class="result-btn dashboard-btn">
-
                         ← Back to Dashboard
-
                     </a>
 
                 </div>
@@ -677,7 +592,6 @@
                   action="{{ url_for('prediction') }}">
 
                 <div class="form-grid">
-
 
                     <!-- MOVIE TITLE -->
 
@@ -794,9 +708,7 @@
 
 
                 <button type="submit" class="predict-btn">
-
                     🔮 Calculate IMDb Rating
-
                 </button>
 
             </form>
@@ -806,195 +718,7 @@
 
     </div>
 
-
-    <!-- MOVIE PREDICTION GRAPH -->
-
-    <div class="graph-section">
-
-        <h2 class="graph-heading">
-            📊 Movie Prediction Statistics
-        </h2>
-
-        <p class="graph-description">
-            Movie-wise prediction count from all users.
-        </p>
-
-
-        {% if movie_labels and movie_counts %}
-
-            <div class="chart-container">
-
-                <canvas id="moviePredictionChart"></canvas>
-
-            </div>
-
-        {% else %}
-
-            <div class="no-data">
-
-                No prediction records available yet.
-                Make a movie prediction to see the graph.
-
-            </div>
-
-        {% endif %}
-
-    </div>
-
 </div>
-
-
-<!-- GRAPH SCRIPT -->
-
-{% if movie_labels and movie_counts %}
-
-<script>
-
-    const movieLabels = {{ movie_labels | tojson }};
-    const movieCounts = {{ movie_counts | tojson }};
-
-    const chartCanvas = document.getElementById(
-        'moviePredictionChart'
-    );
-
-    const maxCount = Math.max(...movieCounts, 0);
-
-    const chartStep = 50;
-
-    const chartMaximum = Math.max(
-        chartStep,
-        Math.ceil(maxCount / chartStep) * chartStep
-    );
-
-    new Chart(chartCanvas, {
-
-        type: 'bar',
-
-        data: {
-
-            labels: movieLabels,
-
-            datasets: [{
-
-                label: 'Number of Predictions',
-
-                data: movieCounts,
-
-                backgroundColor: '#3498db',
-
-                hoverBackgroundColor: '#60a5fa',
-
-                borderColor: '#60a5fa',
-
-                borderWidth: 1,
-
-                borderRadius: 7,
-
-                maxBarThickness: 65
-
-            }]
-
-        },
-
-        options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false,
-
-            plugins: {
-
-                legend: {
-
-                    labels: {
-                        color: '#dbeafe'
-                    }
-
-                },
-
-                title: {
-
-                    display: true,
-
-                    text: 'Movie Name vs Number of Predictions',
-
-                    color: '#ffffff',
-
-                    font: {
-                        size: 16
-                    }
-
-                }
-
-            },
-
-            scales: {
-
-                x: {
-
-                    ticks: {
-                        color: '#cbd5e1'
-                    },
-
-                    grid: {
-                        color: 'rgba(255,255,255,0.05)'
-                    },
-
-                    title: {
-
-                        display: true,
-
-                        text: 'Movie Name',
-
-                        color: '#9fb1c5'
-
-                    }
-
-                },
-
-                y: {
-
-                    beginAtZero: true,
-
-                    min: 0,
-
-                    max: chartMaximum,
-
-                    ticks: {
-
-                        stepSize: chartStep,
-
-                        precision: 0,
-
-                        color: '#cbd5e1'
-
-                    },
-
-                    grid: {
-                        color: 'rgba(255,255,255,0.08)'
-                    },
-
-                    title: {
-
-                        display: true,
-
-                        text: 'Prediction Count',
-
-                        color: '#9fb1c5'
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    });
-
-</script>
-
-{% endif %}
 
 
 <!-- FOOTER -->
@@ -1005,7 +729,6 @@
     All Rights Reserved.
 
 </footer>
-
 
 </body>
 </html>
