@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Movie Prediction | Movie Rating Predictor Pro</title>
+    <title>Movie Prediction | Movie Predict</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
@@ -21,8 +21,6 @@
             color: #e2e8f0;
             font-family: Arial, sans-serif;
         }
-
-        /* NAVBAR */
 
         .navbar {
             background: #142a40;
@@ -70,8 +68,6 @@
             border-radius: 7px;
         }
 
-        /* MAIN CONTAINER */
-
         .container {
             max-width: 1100px;
             margin: auto;
@@ -99,8 +95,6 @@
             border-radius: 14px;
             padding: 30px;
         }
-
-        /* FORM */
 
         .card-heading {
             border-bottom: 1px solid #29435e;
@@ -189,8 +183,6 @@
             transform: translateY(-2px);
         }
 
-        /* ALERTS */
-
         .alert {
             padding: 13px;
             margin-bottom: 18px;
@@ -214,8 +206,6 @@
             color: #fde68a;
         }
 
-        /* PREDICTION RESULT */
-
         .result-section {
             text-align: center;
             padding: 20px 10px;
@@ -232,8 +222,6 @@
             font-size: 14px;
             margin-bottom: 25px;
         }
-
-        /* HALF MOON GAUGE */
 
         .gauge-wrapper {
             width: 320px;
@@ -321,8 +309,6 @@
             margin-top: 20px;
         }
 
-        /* RESULT BUTTONS */
-
         .result-buttons {
             display: flex;
             justify-content: center;
@@ -362,10 +348,16 @@
             transform: translateY(-2px);
         }
 
-        /* RESPONSIVE */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: #71869c;
+            border-top: 1px solid #29435e;
+            margin-top: 40px;
+            font-size: 12px;
+        }
 
         @media(max-width: 700px) {
-
             .navbar {
                 padding: 17px;
             }
@@ -418,12 +410,10 @@
 
 <body>
 
-<!-- NAVIGATION -->
-
 <nav class="navbar">
 
     <div class="brand">
-        🎬 Movie<span>Predict</span> Pro
+        🎬 Movie <span>Predict</span>
     </div>
 
     <div class="nav-links">
@@ -454,9 +444,6 @@
 
 </nav>
 
-
-<!-- MAIN CONTENT -->
-
 <div class="container">
 
     <div class="page-heading">
@@ -470,12 +457,7 @@
 
     </div>
 
-
-    <!-- PREDICTION CARD -->
-
     <div class="prediction-card">
-
-        <!-- FLASH MESSAGES -->
 
         {% with messages = get_flashed_messages(with_categories=true) %}
 
@@ -489,7 +471,6 @@
 
         {% endwith %}
 
-
         {% if predicted_rating is not none %}
 
             {% set rating_value = predicted_rating|float %}
@@ -500,9 +481,6 @@
                 {% set rating_value = 10 %}
             {% endif %}
 
-
-            <!-- PREDICTION COMPLETED -->
-
             <div class="result-section">
 
                 <h2 class="result-heading">
@@ -512,9 +490,6 @@
                 <p class="result-description">
                     Your movie's estimated IMDb rating is ready.
                 </p>
-
-
-                <!-- HALF MOON GAUGE -->
 
                 <div class="gauge-wrapper">
 
@@ -538,11 +513,9 @@
 
                 </div>
 
-
                 <div class="rating-status">
                     ⭐ Predicted IMDb Rating
                 </div>
-
 
                 <p class="result-message">
                     The machine learning model has successfully
@@ -550,9 +523,6 @@
                     <br>
                     You can predict another movie or return to your dashboard.
                 </p>
-
-
-                <!-- BUTTONS -->
 
                 <div class="result-buttons">
 
@@ -570,11 +540,7 @@
 
             </div>
 
-
         {% else %}
-
-
-            <!-- PREDICTION FORM -->
 
             <div class="card-heading">
 
@@ -587,13 +553,10 @@
 
             </div>
 
-
             <form method="POST"
                   action="{{ url_for('prediction') }}">
 
                 <div class="form-grid">
-
-                    <!-- MOVIE TITLE -->
 
                     <div class="form-group full-width">
 
@@ -610,9 +573,6 @@
                         >
 
                     </div>
-
-
-                    <!-- GENRE -->
 
                     <div class="form-group">
 
@@ -638,9 +598,6 @@
 
                     </div>
 
-
-                    <!-- RELEASE YEAR -->
-
                     <div class="form-group">
 
                         <label for="year">
@@ -659,9 +616,6 @@
 
                     </div>
 
-
-                    <!-- DURATION -->
-
                     <div class="form-group">
 
                         <label for="duration_mins">
@@ -679,9 +633,6 @@
                         >
 
                     </div>
-
-
-                    <!-- VOTES -->
 
                     <div class="form-group">
 
@@ -706,13 +657,11 @@
 
                 </div>
 
-
                 <button type="submit" class="predict-btn">
                     🔮 Calculate IMDb Rating
                 </button>
 
             </form>
-
 
         {% endif %}
 
@@ -720,12 +669,9 @@
 
 </div>
 
-
-<!-- FOOTER -->
-
 <footer class="footer">
 
-    © 2026 Movie Rating Predictor Pro.
+    © 2026 Movie Predict.
     All Rights Reserved.
 
 </footer>
