@@ -590,8 +590,11 @@ def prediction():
     """).fetchone()[0]
 
     # Movie-wise prediction counts from all users
+    # Same movie titles are grouped together, ignoring case and spaces.
     movie_data = conn.execute("""
-        SELECT movie_title, COUNT(*) AS prediction_count
+        SELECT
+            MIN(TRIM(movie_title)) AS movie_title,
+            COUNT(*) AS prediction_count
         FROM predictions
         WHERE movie_title IS NOT NULL
           AND TRIM(movie_title) != ''
