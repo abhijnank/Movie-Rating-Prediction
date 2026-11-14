@@ -32,7 +32,7 @@ app = Flask(__name__)
 
 app.secret_key = os.environ.get(
     "SECRET_KEY",
-    "movie-rating-predictor-secret-key-2026"
+    "movie-predict-secret-key-2026"
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
