@@ -1,10 +1,14 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile | Movie Rating Predictor Pro</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <title>My Profile | Movie Predict</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
     <style>
         * {
@@ -235,15 +239,21 @@
 <nav class="navbar">
 
     <div class="logo">
-        🎬 Movie<span>Predict</span> Pro
+        🎬 Movie <span>Predict</span>
     </div>
 
     <div class="nav-links">
+
         <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
         <a href="{{ url_for('prediction') }}">Prediction</a>
+
         <a href="{{ url_for('analytics') }}">Analytics</a>
+
         <a href="{{ url_for('dataset') }}">Dataset</a>
+
         <a href="{{ url_for('profile') }}" class="active">Profile</a>
+
         <a href="{{ url_for('feedback') }}">Feedback</a>
 
         {% if session.get('role') == 'admin' %}
@@ -251,10 +261,10 @@
         {% endif %}
 
         <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+
     </div>
 
 </nav>
-
 
 <div class="profile-container">
 
@@ -262,7 +272,6 @@
         <h1>👤 My Profile</h1>
         <p>View your account information and prediction activity.</p>
     </div>
-
 
     <div class="profile-card">
 
@@ -275,7 +284,7 @@
             <div>
                 <h2>{{ session.get('username', 'User') }}</h2>
 
-                <p>Movie Rating Predictor Pro Account</p>
+                <p>Movie Predict Account</p>
 
                 <span class="role-badge">
                     {{ session.get('role', 'user')|capitalize }} Account
@@ -283,7 +292,6 @@
             </div>
 
         </div>
-
 
         <div class="profile-details">
 
@@ -309,14 +317,14 @@
 
         </div>
 
-
         <div class="profile-actions">
 
             <a href="{{ url_for('prediction') }}" class="profile-btn">
                 🎯 Make Prediction
             </a>
 
-            <a href="{{ url_for('dashboard') }}" class="profile-btn secondary">
+            <a href="{{ url_for('dashboard') }}"
+               class="profile-btn secondary">
                 ← Back to Dashboard
             </a>
 
@@ -326,9 +334,8 @@
 
 </div>
 
-
 <footer class="footer">
-    © 2026 Movie Rating Predictor Pro. All Rights Reserved.
+    © 2026 Movie Predict. All Rights Reserved.
 </footer>
 
 </body>
