@@ -1,9 +1,11 @@
 
 import os
 import sqlite3
+import smtplib
 import pandas as pd
 
 from functools import wraps
+from email.message import EmailMessage
 
 from flask import (
     Flask, render_template, request, redirect,
@@ -13,6 +15,8 @@ from flask import (
 from werkzeug.security import (
     generate_password_hash, check_password_hash
 )
+
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -39,6 +43,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATASET_PATH = os.path.join(BASE_DIR, "MovieDataSet.csv")
 DATABASE_PATH = os.path.join(BASE_DIR, "movie_rating.db")
+
+RESET_TOKEN_SALT = "movie-predict-password-reset"
+RESET_TOKEN_MAX_AGE = 1800  # 30 minutes
 
 
 # ==================================================
@@ -292,6 +299,83 @@ def train_model():
 
 
 # ==================================================
+# PASSWORD RESET TOKEN
+# ==================================================
+
+def generate_reset_token(email):
+
+    serializer = URLSafeTimedSerializer(app.secret_key)
+
+    return serializer.dumps(
+        email,
+        salt=RESET_TOKEN_SALT
+    )
+
+
+def verify_reset_token(token):
+
+    serializer = URLSafeTimedSerializer(app.secret_key)
+
+    try:
+        email = serializer.loads(
+            token,
+            salt=RESET_TOKEN_SALT,
+            max_age=RESET_TOKEN_MAX_AGE
+        )
+
+        return email
+
+    except (SignatureExpired, BadSignature):
+        return None
+
+
+# ==================================================
+# SEND PASSWORD RESET EMAIL
+# ==================================================
+
+def send_reset_email(email, reset_link):
+
+    mail_server = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+    mail_port = int(os.environ.get("MAIL_PORT", "587"))
+    mail_username = os.environ.get("MAIL_USERNAME")
+    mail_password = os.environ.get("MAIL_PASSWORD")
+
+    if not mail_username or not mail_password:
+        raise RuntimeError(
+            "Email settings are not configured. "
+            "Set MAIL_USERNAME and MAIL_PASSWORD."
+        )
+
+    message = EmailMessage()
+
+    message["Subject"] = "Movie Predict - Password Reset"
+    message["From"] = mail_username
+    message["To"] = email
+
+    message.set_content(f"""
+Hello,
+
+We received a request to reset your Movie Predict account password.
+
+Click the link below to create a new password:
+
+{reset_link}
+
+This link expires in 30 minutes.
+
+If you did not request a password reset, you can ignore this email.
+
+Thank you,
+Movie Predict Team
+""")
+
+    with smtplib.SMTP(mail_server, mail_port) as server:
+        server.starttls()
+        server.login(mail_username, mail_password)
+        server.send_message(message)
+
+
+# ==================================================
 # LOGIN REQUIRED
 # ==================================================
 
@@ -332,7 +416,7 @@ def admin_required(function):
 
 
 # ==================================================
-# HOME
+# HOME PAGE
 # ==================================================
 
 @app.route("/")
@@ -341,7 +425,7 @@ def index():
     if "user_id" in session:
         return redirect(url_for("dashboard"))
 
-    return redirect(url_for("login"))
+    return render_template("index.html")
 
 
 # ==================================================
@@ -446,6 +530,132 @@ def login():
         flash("Invalid username or password.", "error")
 
     return render_template("login.html")
+
+
+# ==================================================
+# FORGOT PASSWORD
+# ==================================================
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+
+        email = request.form.get("email", "").strip().lower()
+
+        if not email:
+            flash("Please enter your registered email address.", "error")
+            return redirect(url_for("forgot_password"))
+
+        conn = get_db()
+
+        user = conn.execute("""
+            SELECT id, email FROM users
+            WHERE LOWER(email) = ?
+        """, (email,)).fetchone()
+
+        conn.close()
+
+        if user:
+
+            try:
+                token = generate_reset_token(user["email"])
+
+                reset_link = url_for(
+                    "reset_password",
+                    token=token,
+                    _external=True
+                )
+
+                send_reset_email(user["email"], reset_link)
+
+            except Exception as error:
+                print("PASSWORD RESET EMAIL ERROR:", str(error))
+                flash(
+                    "Unable to send reset email. Please try again later.",
+                    "error"
+                )
+                return redirect(url_for("forgot_password"))
+
+        # Same message whether the email exists or not.
+        flash(
+            "If this email is registered, a password reset link has been sent.",
+            "success"
+        )
+
+        return redirect(url_for("login"))
+
+    return render_template("forgot_password.html")
+
+
+# ==================================================
+# RESET PASSWORD
+# ==================================================
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+
+    email = verify_reset_token(token)
+
+    if not email:
+        flash(
+            "This password reset link is invalid or has expired.",
+            "error"
+        )
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if len(password) < 6:
+            flash(
+                "Password must contain at least 6 characters.",
+                "error"
+            )
+            return redirect(
+                url_for("reset_password", token=token)
+            )
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "error")
+            return redirect(
+                url_for("reset_password", token=token)
+            )
+
+        conn = get_db()
+
+        user = conn.execute("""
+            SELECT id FROM users
+            WHERE LOWER(email) = ?
+        """, (email.lower(),)).fetchone()
+
+        if user is None:
+            conn.close()
+            flash("Account not found.", "error")
+            return redirect(url_for("forgot_password"))
+
+        conn.execute("""
+            UPDATE users
+            SET password = ?
+            WHERE id = ?
+        """, (
+            generate_password_hash(password),
+            user["id"]
+        ))
+
+        conn.commit()
+        conn.close()
+
+        flash(
+            "Password changed successfully. Please login.",
+            "success"
+        )
+
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html")
 
 
 # ==================================================
@@ -584,13 +794,10 @@ def prediction():
             print("PREDICTION ERROR:", str(error))
             flash("Unable to calculate prediction. Please try again.", "error")
 
-    # Total predictions from all users
     total_predictions = conn.execute("""
         SELECT COUNT(*) FROM predictions
     """).fetchone()[0]
 
-    # Movie-wise prediction counts from all users
-    # Same movie titles are grouped together, ignoring case and spaces.
     movie_data = conn.execute("""
         SELECT
             MIN(TRIM(movie_title)) AS movie_title,
@@ -903,7 +1110,7 @@ def logout():
     session.clear()
     flash("You have been logged out.", "success")
 
-    return redirect(url_for("login"))
+    return redirect(url_for("index"))
 
 
 # ==================================================
