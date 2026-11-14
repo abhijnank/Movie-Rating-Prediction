@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -23,6 +24,8 @@
             color: #e2e8f0;
             font-family: Arial, sans-serif;
         }
+
+        /* NAVBAR */
 
         .navbar {
             background: #142a40;
@@ -70,6 +73,8 @@
             border-radius: 7px;
         }
 
+        /* MAIN CONTAINER */
+
         .container {
             max-width: 1100px;
             margin: auto;
@@ -97,6 +102,8 @@
             border-radius: 14px;
             padding: 30px;
         }
+
+        /* FORM */
 
         .card-heading {
             border-bottom: 1px solid #29435e;
@@ -185,6 +192,8 @@
             transform: translateY(-2px);
         }
 
+        /* ALERTS */
+
         .alert {
             padding: 13px;
             margin-bottom: 18px;
@@ -208,32 +217,11 @@
             color: #fde68a;
         }
 
-        .info-panel {
-            background: #0d2034;
-            border: 1px solid #36516d;
-            border-radius: 10px;
-            padding: 18px;
-            margin-top: 25px;
-        }
-
-        .info-panel h3 {
-            color: #60a5fa;
-            font-size: 15px;
-            margin-top: 0;
-        }
-
-        .info-panel p {
-            color: #9fb1c5;
-            font-size: 13px;
-            line-height: 1.7;
-            margin-bottom: 0;
-        }
-
-        /* SPEEDOMETER RESULT */
+        /* PREDICTION RESULT */
 
         .result-section {
             text-align: center;
-            padding: 25px 10px;
+            padding: 20px 10px;
         }
 
         .result-heading {
@@ -245,103 +233,110 @@
         .result-description {
             color: #9fb1c5;
             font-size: 14px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
+        /* HALF MOON GAUGE */
+
         .gauge-wrapper {
-            width: 280px;
+            width: 320px;
             max-width: 100%;
-            margin: 20px auto 10px;
+            margin: 25px auto 10px;
+            text-align: center;
         }
 
         .gauge {
-            width: 260px;
+            width: 300px;
             max-width: 100%;
-            height: 135px;
-            overflow: hidden;
+            height: 155px;
             position: relative;
+            overflow: hidden;
             margin: auto;
         }
 
         .gauge-arc {
             position: absolute;
-            width: 260px;
-            height: 260px;
-            top: 0;
+            width: 300px;
+            height: 300px;
             left: 50%;
+            top: 0;
             transform: translateX(-50%);
             border-radius: 50%;
 
             background: conic-gradient(
-                from 180deg,
-                #22c55e 0deg var(--angle),
-                #29435e var(--angle) 180deg,
-                transparent 180deg 360deg
+                from 270deg,
+                #22c55e 0deg,
+                #38bdf8 var(--angle),
+                #29435e var(--angle),
+                #29435e 180deg,
+                transparent 180deg
             );
 
             -webkit-mask: radial-gradient(
-                farthest-side,
-                transparent calc(100% - 23px),
-                #000 calc(100% - 22px)
+                circle,
+                transparent 0 68%,
+                black 69% 100%
             );
 
             mask: radial-gradient(
-                farthest-side,
-                transparent calc(100% - 23px),
-                #000 calc(100% - 22px)
+                circle,
+                transparent 0 68%,
+                black 69% 100%
             );
         }
 
         .gauge-value {
             color: #60a5fa;
-            font-size: 43px;
+            font-size: 30px;
             font-weight: bold;
-            margin-top: -5px;
+            margin-top: 2px;
         }
 
         .gauge-value span {
             color: #9fb1c5;
-            font-size: 17px;
+            font-size: 15px;
         }
 
         .gauge-labels {
             display: flex;
             justify-content: space-between;
             color: #9fb1c5;
-            font-size: 13px;
-            padding: 0 15px;
+            font-size: 12px;
+            padding: 0 18px;
             margin-top: 5px;
         }
 
         .rating-status {
             display: inline-block;
-            margin-top: 22px;
+            margin-top: 17px;
             padding: 10px 22px;
             border-radius: 30px;
             background: #123b30;
             color: #86efac;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
         }
 
         .result-message {
             color: #cbd5e1;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.7;
-            margin-top: 22px;
+            margin-top: 20px;
         }
+
+        /* RESULT BUTTONS */
 
         .result-buttons {
             display: flex;
             justify-content: center;
             gap: 15px;
             flex-wrap: wrap;
-            margin-top: 30px;
+            margin-top: 25px;
         }
 
         .result-btn {
             display: inline-block;
-            padding: 14px 23px;
+            padding: 13px 23px;
             border-radius: 8px;
             text-decoration: none;
             font-size: 14px;
@@ -370,13 +365,15 @@
             transform: translateY(-2px);
         }
 
+        /* DIVIDER */
+
         .result-divider {
             border: none;
             border-top: 1px solid #29435e;
             margin: 30px 0;
         }
 
-        /* PREDICTION GRAPH */
+        /* MOVIE PREDICTION GRAPH */
 
         .graph-section {
             background: #142a40;
@@ -399,30 +396,9 @@
             margin-bottom: 22px;
         }
 
-        .total-box {
-            background: #0d2034;
-            border: 1px solid #36516d;
-            border-radius: 10px;
-            padding: 18px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .total-box h3 {
-            color: #9fb1c5;
-            font-size: 14px;
-            margin: 0 0 10px;
-        }
-
-        .total-box h1 {
-            color: #60a5fa;
-            font-size: 38px;
-            margin: 0;
-        }
-
         .chart-container {
             width: 100%;
-            height: 350px;
+            height: 370px;
             position: relative;
         }
 
@@ -433,6 +409,8 @@
             font-size: 14px;
         }
 
+        /* FOOTER */
+
         .footer {
             text-align: center;
             padding: 25px;
@@ -442,7 +420,10 @@
             font-size: 12px;
         }
 
+        /* RESPONSIVE */
+
         @media(max-width: 700px) {
+
             .navbar {
                 padding: 17px;
             }
@@ -481,10 +462,26 @@
             }
 
             .chart-container {
-                height: 300px;
+                height: 320px;
+            }
+
+            .gauge-wrapper {
+                width: 280px;
+            }
+
+            .gauge {
+                width: 270px;
+                height: 140px;
+            }
+
+            .gauge-arc {
+                width: 270px;
+                height: 270px;
             }
         }
+
     </style>
+
 </head>
 
 <body>
@@ -542,16 +539,22 @@
     </div>
 
 
+    <!-- PREDICTION CARD -->
+
     <div class="prediction-card">
 
         <!-- FLASH MESSAGES -->
 
         {% with messages = get_flashed_messages(with_categories=true) %}
+
             {% for category, message in messages %}
+
                 <div class="alert alert-{{ category }}">
                     {{ message }}
                 </div>
+
             {% endfor %}
+
         {% endwith %}
 
 
@@ -566,7 +569,7 @@
             {% endif %}
 
 
-            <!-- PREDICTION RESULT -->
+            <!-- PREDICTION COMPLETED -->
 
             <div class="result-section">
 
@@ -579,16 +582,17 @@
                 </p>
 
 
-                <!-- SPEEDOMETER -->
+                <!-- HALF MOON GAUGE -->
 
                 <div class="gauge-wrapper">
 
                     <div class="gauge"
-                         style="--angle: {{ (rating_value * 18)|round(1) }}deg;">
+                         style="--angle: {{ (rating_value * 18)|round(2) }}deg;">
 
                         <div class="gauge-arc"></div>
 
                     </div>
+
 
                     <div class="gauge-value">
 
@@ -598,10 +602,13 @@
 
                     </div>
 
+
                     <div class="gauge-labels">
 
                         <span>0</span>
+
                         <span>5</span>
+
                         <span>10</span>
 
                     </div>
@@ -615,39 +622,36 @@
 
 
                 <p class="result-message">
+
                     The machine learning model has successfully
                     calculated your movie's estimated rating.
+
                     <br>
+
                     You can predict another movie or return to your dashboard.
+
                 </p>
 
-            </div>
 
+                <!-- BUTTONS -->
 
-            <hr class="result-divider">
+                <div class="result-buttons">
 
+                    <a href="{{ url_for('prediction') }}"
+                       class="result-btn another-btn">
 
-            <!-- NEXT OPTIONS -->
+                        🔮 Predict Another Movie
 
-            <h3 style="text-align:center; color:white;">
-                What Would You Like To Do Next?
-            </h3>
+                    </a>
 
-            <div class="result-buttons">
+                    <a href="{{ url_for('dashboard') }}"
+                       class="result-btn dashboard-btn">
 
-                <a href="{{ url_for('prediction') }}"
-                   class="result-btn another-btn">
+                        ← Back to Dashboard
 
-                    🔮 Predict Another Movie
+                    </a>
 
-                </a>
-
-                <a href="{{ url_for('dashboard') }}"
-                   class="result-btn dashboard-btn">
-
-                    ← Back to Dashboard
-
-                </a>
+                </div>
 
             </div>
 
@@ -679,7 +683,9 @@
 
                     <div class="form-group full-width">
 
-                        <label for="movie_title">Movie Title</label>
+                        <label for="movie_title">
+                            Movie Title
+                        </label>
 
                         <input
                             type="text"
@@ -696,7 +702,9 @@
 
                     <div class="form-group">
 
-                        <label for="genre">Primary Genre</label>
+                        <label for="genre">
+                            Primary Genre
+                        </label>
 
                         <select id="genre" name="genre" required>
 
@@ -721,7 +729,9 @@
 
                     <div class="form-group">
 
-                        <label for="year">Release Year</label>
+                        <label for="year">
+                            Release Year
+                        </label>
 
                         <input
                             type="number"
@@ -791,28 +801,8 @@
 
             </form>
 
+
         {% endif %}
-
-
-        <!-- MODEL INFORMATION -->
-
-        <div class="info-panel">
-
-            <h3>🤖 Machine Learning Information</h3>
-
-            <p>
-                Prediction Algorithm: Linear Regression
-                <br>
-                Framework: Flask
-                <br>
-                Library: Scikit-learn
-                <br>
-                Input Features: Genre, Year, Duration and Votes
-                <br>
-                Output: Predicted IMDb Rating (0–10)
-            </p>
-
-        </div>
 
     </div>
 
@@ -830,19 +820,6 @@
         </p>
 
 
-        <!-- TOTAL PREDICTIONS -->
-
-        <div class="total-box">
-
-            <h3>Total Predictions</h3>
-
-            <h1>{{ total_predictions|default(0) }}</h1>
-
-        </div>
-
-
-        <!-- GRAPH -->
-
         {% if movie_labels and movie_counts %}
 
             <div class="chart-container">
@@ -854,8 +831,10 @@
         {% else %}
 
             <div class="no-data">
+
                 No prediction records available yet.
                 Make a movie prediction to see the graph.
+
             </div>
 
         {% endif %}
@@ -878,6 +857,15 @@
         'moviePredictionChart'
     );
 
+    const maxCount = Math.max(...movieCounts, 0);
+
+    const chartStep = 50;
+
+    const chartMaximum = Math.max(
+        chartStep,
+        Math.ceil(maxCount / chartStep) * chartStep
+    );
+
     new Chart(chartCanvas, {
 
         type: 'bar',
@@ -893,6 +881,8 @@
                 data: movieCounts,
 
                 backgroundColor: '#3498db',
+
+                hoverBackgroundColor: '#60a5fa',
 
                 borderColor: '#60a5fa',
 
@@ -966,7 +956,13 @@
 
                     beginAtZero: true,
 
+                    min: 0,
+
+                    max: chartMaximum,
+
                     ticks: {
+
+                        stepSize: chartStep,
 
                         precision: 0,
 
@@ -1009,6 +1005,7 @@
     All Rights Reserved.
 
 </footer>
+
 
 </body>
 </html>
