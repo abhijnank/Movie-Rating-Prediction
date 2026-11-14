@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Login | Movie Rating Predictor Pro</title>
+    <title>Login | Movie Predict</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
@@ -114,6 +113,13 @@
             color: white;
         }
 
+        .forgot-password {
+            display: block;
+            text-align: right;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
         .login-btn {
             width: 100%;
             margin-top: 25px;
@@ -199,7 +205,7 @@
         <h1>Welcome Back</h1>
 
         <p class="subtitle">
-            Login to Movie Rating Predictor Pro
+            Login to Movie Predict
         </p>
 
         <!-- Flash Messages -->
@@ -248,6 +254,14 @@
 
             </div>
 
+            <!-- Forgot Password Link -->
+            <div class="forgot-password">
+                <a class="auth-link"
+                   href="{{ url_for('forgot_password') }}">
+                    Forgot Password?
+                </a>
+            </div>
+
             <button type="submit" class="login-btn">
                 Login
             </button>
@@ -264,7 +278,7 @@
         </p>
 
         <div class="footer">
-            © 2026 Movie Rating Predictor Pro
+            © 2026 Movie Predict
             <br>
             All Rights Reserved
         </div>
