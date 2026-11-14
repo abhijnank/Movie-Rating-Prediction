@@ -4,255 +4,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Movie Rating Predictor Pro</title>
+
+    <title>Home | Movie Predict</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-        .dashboard-layout {
-            display: flex;
+        .home-layout {
             min-height: 100vh;
         }
 
-        .dashboard-sidebar {
-            width: 245px;
+        .home-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 7%;
             background: #101827;
-            border-right: 1px solid #263449;
-            padding: 25px 15px;
-            flex-shrink: 0;
+            border-bottom: 1px solid #263449;
+            gap: 20px;
         }
 
-        .brand {
-            font-size: 19px;
+        .home-brand {
+            font-size: 23px;
             font-weight: 800;
             color: #ffffff;
-            padding: 10px;
-            margin-bottom: 30px;
         }
 
-        .brand span {
+        .home-brand span {
             color: #3987ff;
         }
 
-        .menu-title {
-            color: #718096;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 12px;
-            letter-spacing: 1px;
-        }
-
-        .dashboard-sidebar a {
+        .home-nav-links {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 13px;
-            margin: 5px 0;
+        }
+
+        .home-nav-links a {
             color: #cbd5e1;
-            border-radius: 9px;
+            padding: 10px 17px;
+            border-radius: 8px;
             font-size: 14px;
             transition: 0.3s;
         }
 
-        .dashboard-sidebar a:hover,
-        .dashboard-sidebar a.active {
+        .home-nav-links a:hover {
+            color: #60a5fa;
+            background: #1d3150;
+        }
+
+        .home-nav-links .register-btn {
+            background: #3987ff;
+            color: white;
+        }
+
+        .home-nav-links .register-btn:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        .hero-section {
+            padding: 90px 8%;
+            text-align: center;
+            background: linear-gradient(120deg, #172b49, #252047);
+            border-bottom: 1px solid #344665;
+        }
+
+        .hero-section .hero-tag {
+            display: inline-block;
             background: #1d3150;
             color: #60a5fa;
+            padding: 9px 18px;
+            border-radius: 25px;
+            font-size: 13px;
+            margin-bottom: 22px;
         }
 
-        .dashboard-main {
-            flex: 1;
-            min-width: 0;
+        .hero-section h1 {
+            font-size: 45px;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: #ffffff;
         }
 
-        .topbar {
-            background: #101827;
-            border-bottom: 1px solid #263449;
-            padding: 19px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .topbar h2 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        .user-info {
+        .hero-section h1 span {
             color: #60a5fa;
+        }
+
+        .hero-section p {
+            max-width: 700px;
+            margin: 0 auto 28px;
+            color: #cbd5e1;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .hero-buttons a {
+            display: inline-block;
+            padding: 13px 24px;
+            border-radius: 9px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .primary-btn {
+            background: #3987ff;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .secondary-btn {
+            border: 1px solid #64748b;
+            color: #ffffff;
+        }
+
+        .secondary-btn:hover {
+            background: #1d3150;
+            border-color: #60a5fa;
+        }
+
+        .home-content {
+            padding: 55px 7%;
+        }
+
+        .home-heading {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .home-heading h2 {
+            font-size: 27px;
+            margin-bottom: 12px;
+        }
+
+        .home-heading p {
+            color: #8492a6;
             font-size: 14px;
         }
 
-        .dashboard-content {
-            padding: 30px;
-        }
-
-        .welcome-section {
-            background: linear-gradient(120deg, #172b49, #252047);
-            border: 1px solid #344665;
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 25px;
-        }
-
-        .welcome-section h1 {
-            font-size: 27px;
-            margin-bottom: 10px;
-        }
-
-        .welcome-section p {
-            color: #cbd5e1;
-            margin-bottom: 20px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 18px;
-            margin-bottom: 28px;
-        }
-
-        .stat-card {
-            margin: 0;
-            min-width: 0;
-        }
-
-        .stat-icon {
-            font-size: 25px;
-            margin-bottom: 15px;
-        }
-
-        .stat-card h2 {
-            font-size: 27px;
-        }
-
-        .stat-card small {
-            font-size: 12px;
-        }
-
-        .section-heading {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 28px 0 17px;
-            gap: 10px;
-        }
-
-        .section-heading h2 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        .feature-grid {
+        .features-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 18px;
+            gap: 20px;
         }
 
-        .feature-card {
+        .home-feature-card {
             background: #151e2e;
             border: 1px solid #263449;
             border-radius: 14px;
-            padding: 22px;
+            padding: 25px;
             transition: 0.3s;
         }
 
-        .feature-card:hover {
-            transform: translateY(-4px);
+        .home-feature-card:hover {
+            transform: translateY(-5px);
             border-color: #3987ff;
             background: #1b2940;
         }
 
-        .feature-icon {
-            font-size: 30px;
-            margin-bottom: 14px;
+        .home-feature-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
         }
 
-        .feature-card h3 {
-            font-size: 16px;
+        .home-feature-card h3 {
+            font-size: 17px;
+            margin-bottom: 10px;
         }
 
-        .feature-card p {
+        .home-feature-card p {
             color: #8492a6;
             font-size: 13px;
-            margin-bottom: 17px;
+            line-height: 1.7;
         }
 
-        .model-panel {
+        .about-section {
+            margin: 15px 7% 55px;
+            padding: 30px;
+            background: #151e2e;
+            border: 1px solid #263449;
+            border-radius: 15px;
+        }
+
+        .about-section h2 {
+            color: #60a5fa;
+            margin-bottom: 15px;
+        }
+
+        .about-section p {
+            color: #cbd5e1;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .project-info-grid {
             display: grid;
-            grid-template-columns: 1.5fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 18px;
             margin-top: 25px;
         }
 
-        .model-info {
-            background: #151e2e;
+        .project-info-card {
+            background: #101827;
             border: 1px solid #263449;
-            padding: 24px;
-            border-radius: 14px;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
         }
 
-        .model-info h3 {
+        .project-info-card h3 {
             color: #60a5fa;
+            font-size: 17px;
+            margin-bottom: 8px;
         }
 
-        .model-status {
-            display: inline-block;
-            background: #123c32;
-            color: #86efac;
-            padding: 7px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-top: 10px;
+        .project-info-card p {
+            color: #8492a6;
+            font-size: 13px;
         }
 
-        .footer {
-            margin-top: 35px;
+        .home-cta {
+            margin: 0 7% 55px;
+            padding: 40px 25px;
+            text-align: center;
+            background: #172b49;
+            border: 1px solid #344665;
+            border-radius: 15px;
         }
 
-        @media(max-width: 1100px) {
-            .stats-grid {
+        .home-cta h2 {
+            margin-bottom: 12px;
+        }
+
+        .home-cta p {
+            color: #cbd5e1;
+            margin-bottom: 22px;
+        }
+
+        .home-footer {
+            padding: 22px;
+            text-align: center;
+            background: #101827;
+            border-top: 1px solid #263449;
+            color: #8492a6;
+            font-size: 13px;
+        }
+
+        @media(max-width: 900px) {
+            .features-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
 
-            .feature-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .hero-section h1 {
+                font-size: 36px;
             }
         }
 
-        @media(max-width: 750px) {
-            .dashboard-layout {
-                display: block;
+        @media(max-width: 600px) {
+            .home-navbar {
+                flex-direction: column;
+                padding: 18px;
             }
 
-            .dashboard-sidebar {
-                width: 100%;
-                min-height: auto;
+            .home-nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
             }
 
-            .dashboard-sidebar a {
-                display: inline-flex;
-                padding: 9px;
+            .hero-section {
+                padding: 60px 20px;
             }
 
-            .dashboard-content {
-                padding: 17px;
+            .hero-section h1 {
+                font-size: 30px;
             }
 
-            .feature-grid,
-            .model-panel {
+            .features-grid,
+            .project-info-grid {
                 grid-template-columns: 1fr;
             }
 
-            .topbar {
-                padding: 16px;
+            .home-content {
+                padding: 40px 18px;
             }
-        }
 
-        @media(max-width: 450px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
+            .about-section,
+            .home-cta {
+                margin-left: 18px;
+                margin-right: 18px;
             }
         }
     </style>
@@ -260,254 +310,185 @@
 
 <body>
 
-<div class="dashboard-layout">
+<div class="home-layout">
 
-    <!-- SIDEBAR -->
-    <aside class="dashboard-sidebar">
+    <!-- NAVIGATION -->
+    <header class="home-navbar">
 
-        <div class="brand">
-            🎬 Movie<span>Predict</span>
+        <div class="home-brand">
+            🎬 Movie<span> Predict</span>
         </div>
 
-        <div class="menu-title">MAIN MENU</div>
+        <nav class="home-nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('register') }}" class="register-btn">Register</a>
+        </nav>
 
-        <a href="{{ url_for('index') }}" class="active">
-            🏠 Dashboard
-        </a>
-
-        <a href="{{ url_for('prediction') }}">
-            🎯 Movie Prediction
-        </a>
-
-        <a href="{{ url_for('analytics') }}">
-            📊 Analytics
-        </a>
-
-        <a href="{{ url_for('dataset') }}">
-            🗃️ Dataset
-        </a>
-
-        <div class="menu-title">ACCOUNT</div>
-
-        <a href="{{ url_for('profile') }}">
-            👤 My Profile
-        </a>
-
-        <a href="{{ url_for('feedback') }}">
-            💬 Feedback
-        </a>
-
-        {% if session.get('role') == 'admin' %}
-        <div class="menu-title">ADMINISTRATION</div>
-        <a href="{{ url_for('admin') }}">
-            ⚙️ Admin Panel
-        </a>
-        {% endif %}
-
-        <div class="menu-title">SESSION</div>
-
-        <a href="{{ url_for('logout') }}">
-            🚪 Logout
-        </a>
-
-    </aside>
+    </header>
 
 
-    <!-- MAIN CONTENT -->
-    <main class="dashboard-main">
+    <!-- HERO SECTION -->
+    <section class="hero-section">
 
-        <header class="topbar">
-            <h2>Dashboard Overview</h2>
+        <div class="hero-tag">
+            🤖 Machine Learning Based Application
+        </div>
 
-            <div class="user-info">
-                👤 {{ session.get('username', 'User') }}
-            </div>
-        </header>
+        <h1>
+            Welcome to <span>Movie Predict</span>
+        </h1>
+
+        <p>
+            Discover the potential rating of a movie using
+            Machine Learning. Enter movie details, estimate
+            ratings and explore movie dataset analytics
+            through a simple and user-friendly platform.
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="{{ url_for('login') }}" class="primary-btn">
+                Get Started →
+            </a>
+
+            <a href="{{ url_for('register') }}" class="secondary-btn">
+                Create Account
+            </a>
+
+        </div>
+
+    </section>
 
 
-        <div class="dashboard-content">
+    <!-- FEATURES SECTION -->
+    <section class="home-content">
 
-            <!-- WELCOME -->
-            <section class="welcome-section">
+        <div class="home-heading">
+            <h2>Explore Movie Predict</h2>
+            <p>
+                Useful features to explore and predict movie ratings.
+            </p>
+        </div>
 
-                <h1>Welcome to Movie Rating Predictor Pro 👋</h1>
+        <div class="features-grid">
 
+            <div class="home-feature-card">
+                <div class="home-feature-icon">🎯</div>
+                <h3>Movie Rating Prediction</h3>
                 <p>
-                    Predict movie ratings using Machine Learning
-                    and explore movie dataset analytics.
+                    Enter movie information and estimate
+                    its rating using a Linear Regression model.
                 </p>
-
-                <a href="{{ url_for('prediction') }}" class="btn">
-                    Start New Prediction →
-                </a>
-
-            </section>
-
-
-            <!-- STATISTICS -->
-            <div class="stats-grid">
-
-                <div class="stat-card">
-                    <div class="stat-icon">🎬</div>
-                    <small>Total Pre-loaded Movies</small>
-                    <h2>{{ total_movies }}</h2>
-                    <p>Movies in dataset</p>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">⭐</div>
-                    <small>Average IMDb Rating</small>
-                    <h2>{{ "%.2f"|format(avg_rating|default(0)) }}</h2>
-                    <p>Average dataset rating</p>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">🎯</div>
-                    <small>Active Predictions</small>
-                    <h2>{{ total_predictions }}</h2>
-                    <p>Total prediction records</p>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">🤖</div>
-                    <small>Machine Learning</small>
-                    <h2 style="font-size:21px;">Linear Regression</h2>
-                    <p>Prediction algorithm</p>
-                </div>
-
             </div>
 
-
-            <!-- QUICK ACCESS -->
-            <div class="section-heading">
-                <h2>Quick Access</h2>
+            <div class="home-feature-card">
+                <div class="home-feature-icon">📊</div>
+                <h3>Analytics Dashboard</h3>
+                <p>
+                    Explore movie rating trends, genre analysis
+                    and prediction statistics through graphs.
+                </p>
             </div>
 
-            <div class="feature-grid">
-
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>Movie Prediction</h3>
-                    <p>
-                        Enter movie details and estimate
-                        its rating using Linear Regression.
-                    </p>
-                    <a href="{{ url_for('prediction') }}" class="btn">
-                        Predict Now →
-                    </a>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Analytics Dashboard</h3>
-                    <p>
-                        Explore rating trends, genre analysis
-                        and prediction statistics.
-                    </p>
-                    <a href="{{ url_for('analytics') }}" class="btn">
-                        View Analytics →
-                    </a>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🗃️</div>
-                    <h3>Movie Dataset</h3>
-                    <p>
-                        Browse pre-loaded movie information,
-                        ratings and other details.
-                    </p>
-                    <a href="{{ url_for('dataset') }}" class="btn">
-                        Explore Dataset →
-                    </a>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">👤</div>
-                    <h3>My Profile</h3>
-                    <p>
-                        View your account information
-                        and prediction activity.
-                    </p>
-                    <a href="{{ url_for('profile') }}" class="btn">
-                        View Profile →
-                    </a>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">💬</div>
-                    <h3>Feedback</h3>
-                    <p>
-                        Share your experience and
-                        suggestions about this application.
-                    </p>
-                    <a href="{{ url_for('feedback') }}" class="btn">
-                        Give Feedback →
-                    </a>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3>Machine Learning Model</h3>
-                    <p>
-                        This application uses a Linear
-                        Regression model for rating prediction.
-                    </p>
-                    <a href="{{ url_for('analytics') }}" class="btn">
-                        Model Analytics →
-                    </a>
-                </div>
-
+            <div class="home-feature-card">
+                <div class="home-feature-icon">🗃️</div>
+                <h3>Movie Dataset</h3>
+                <p>
+                    Browse the pre-loaded movie dataset
+                    and explore available movie information.
+                </p>
             </div>
 
-
-            <!-- MODEL INFORMATION -->
-            <div class="section-heading">
-                <h2>Model Information</h2>
+            <div class="home-feature-card">
+                <div class="home-feature-icon">👤</div>
+                <h3>User Profile</h3>
+                <p>
+                    Manage your account information
+                    and view your prediction activity.
+                </p>
             </div>
 
-            <div class="model-panel">
-
-                <div class="model-info">
-                    <h3>🤖 Linear Regression Model</h3>
-
-                    <p>
-                        The Movie Rating Prediction System uses
-                        Linear Regression to estimate movie ratings
-                        from the movie information provided.
-                    </p>
-
-                    <br>
-
-                    <p><strong>Algorithm:</strong> Linear Regression</p>
-                    <p><strong>Dataset:</strong> Moviedataset.csv</p>
-                    <p><strong>Target:</strong> Movie Rating</p>
-
-                    <span class="model-status">
-                        ● Model Information
-                    </span>
-                </div>
-
-                <div class="model-info">
-                    <h3>📌 Project Features</h3>
-
-                    <p>✓ User Registration and Login</p>
-                    <p>✓ Movie Rating Prediction</p>
-                    <p>✓ Dataset Exploration</p>
-                    <p>✓ Analytics and Graphs</p>
-                    <p>✓ User Feedback</p>
-                    <p>✓ Admin Management</p>
-                </div>
-
+            <div class="home-feature-card">
+                <div class="home-feature-icon">💬</div>
+                <h3>User Feedback</h3>
+                <p>
+                    Share your experience and suggestions
+                    to help improve the application.
+                </p>
             </div>
 
-            <footer class="footer">
-                © 2026 Movie Rating Predictor Pro |
-                Powered by Linear Regression
-            </footer>
+            <div class="home-feature-card">
+                <div class="home-feature-icon">⚙️</div>
+                <h3>Admin Management</h3>
+                <p>
+                    Admin users can manage application
+                    information and monitor user activity.
+                </p>
+            </div>
 
         </div>
 
-    </main>
+    </section>
+
+
+    <!-- ABOUT PROJECT -->
+    <section class="about-section">
+
+        <h2>About Movie Rating Prediction</h2>
+
+        <p>
+            Movie Rating Prediction is a Machine Learning project
+            developed using Python and Flask. The application uses
+            a Linear Regression algorithm to estimate movie ratings
+            based on the movie information provided by users.
+            It also provides dataset exploration, analytics,
+            user account management and feedback features.
+        </p>
+
+        <div class="project-info-grid">
+
+            <div class="project-info-card">
+                <h3>🤖 Algorithm</h3>
+                <p>Linear Regression</p>
+            </div>
+
+            <div class="project-info-card">
+                <h3>🐍 Technology</h3>
+                <p>Python and Flask</p>
+            </div>
+
+            <div class="project-info-card">
+                <h3>📈 Purpose</h3>
+                <p>Movie Rating Estimation</p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CALL TO ACTION -->
+    <section class="home-cta">
+
+        <h2>Start Exploring Movie Ratings</h2>
+
+        <p>
+            Create your account and start using Movie Predict.
+        </p>
+
+        <a href="{{ url_for('register') }}" class="btn">
+            Register Now →
+        </a>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer class="home-footer">
+        © 2026 Movie Predict |
+        Powered by Linear Regression
+    </footer>
 
 </div>
 
